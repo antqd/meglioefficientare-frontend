@@ -7,6 +7,7 @@ import React, { useRef, useState, useMemo } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
+import { Link } from "react-router-dom";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -117,12 +118,12 @@ function Header() {
           <a href="#richiesta" className="hover:text-orange-600">
             Come richiederlo
           </a>
-          <a
-            href="#calcolatore"
+          <Link
+            to="/Compilazione"
             className="rounded-full bg-orange-600 text-white px-4 py-2 hover:bg-orange-700"
           >
-            Calcola ora
-          </a>
+            Attiva Ora!
+          </Link>
         </nav>
       </div>
     </header>
