@@ -104,10 +104,9 @@ function Header() {
   return (
     <header className="sticky top-0 z-40 bg-white/90 backdrop-blur border-b">
       <div className="mx-auto max-w-6xl px-4 h-14 flex items-center gap-3">
-        <Logo className="h-6 w-6" />
-        <span className="font-extrabold tracking-tight">
-          Meglio Efficientare
-        </span>
+
+        <img src="/images/logo.png" alt="Meglio Efficientare" className="h-14 w-66" />
+
         <nav className="ml-auto hidden md:flex items-center gap-4 text-sm font-medium">
           <a href="#novita" className="hover:text-orange-600">
             Novità
