@@ -5,7 +5,7 @@ import { saveAs } from "file-saver";
 import SignatureCanvas from "react-signature-canvas";
 import { useNavigate } from "react-router-dom";
 
-const API_INVIO = "https://emailsender-68kp.onrender.com/api/ct3-invio";
+const API_INVIO = "https://bc.davveroo.it/api/ct3-invio";
 
 // ====== Coordinate di stampa (NON MODIFICATE) ======
 const POS = {
