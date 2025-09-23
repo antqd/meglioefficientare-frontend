@@ -825,8 +825,8 @@ function UploadSection({
 // (serve perché stiamo mappando per sezione)
 function fileIndexOffset(sectionKey, idxInSection, getFilesBySection) {
   const sections = [
-    "codice_fiscale",
-    "documento_identita",
+    "utenze luce e gas",
+    "documento_identita e codice_fiscale",
     "catastale",
     "foto_generatore",
     "visura",
