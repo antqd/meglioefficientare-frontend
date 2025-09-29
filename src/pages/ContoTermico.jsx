@@ -108,6 +108,7 @@ function Header() {
         <img src="/images/logo.png" alt="Meglio Efficientare" className="h-14 w-66" />
 
         <nav className="ml-auto hidden md:flex items-center gap-4 text-sm font-medium">
+          
           <a href="#novita" className="hover:text-orange-600">
             Novità
           </a>
@@ -123,6 +124,10 @@ function Header() {
           >
             Attiva Ora!
           </Link>
+          <a href="/"             className="rounded-full bg-orange-600 text-white px-4 py-2 hover:bg-orange-700"
+>
+            Torna alla home
+          </a>
         </nav>
       </div>
     </header>

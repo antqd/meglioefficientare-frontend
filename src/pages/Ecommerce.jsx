@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import Navbar from "../components/NavBar.jsx";
-
+import Navbar from "../components/Navbar";
 // Prodotti completi per l'ecommerce
 const PRODOTTI_ECOMMERCE = [
   {
