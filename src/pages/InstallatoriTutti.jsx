@@ -1,7 +1,7 @@
 // src/pages/InstallatoriTuttiPage.jsx
 import React, { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import Navbar from "../components/NavBar.jsx";
+import Navbar from "../components/Navbar";
 import { PROVINCE, INSTALLATORI } from "../data/installatori.js";
 
 export default function InstallatoriTuttiPage() {
