@@ -1,815 +1,523 @@
-import React, { useState } from "react";
+// src/pages/InstallatoriPage.jsx
+import React, { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import Navbar from "../components/NavBar.jsx";
 
-const INSTALLATORI_MOCK = [
+const PROVINCE = [
+  "Milano (MI)",
+  "Roma (RM)",
+  "Torino (TO)",
+  "Bologna (BO)",
+  "Firenze (FI)",
+  "Genova (GE)",
+  "Venezia (VE)",
+  "Verona (VR)",
+  "Bari (BA)",
+  "Napoli (NA)",
+];
+
+const CATEGORIE = [
+  {
+    id: "elettrico",
+    titolo: "Elettrico",
+    descr: "Quadri, linee, colonnine EV, domotica",
+    img: "/images/categorie/elettrico.jpg",
+  },
+  {
+    id: "idraulico",
+    titolo: "Idraulico",
+    descr: "Impianti idrico-sanitari, perdite, sostituzioni",
+    img: "/images/categorie/idraulico.jpg",
+  },
+  {
+    id: "clima",
+    titolo: "Clima / PDC",
+    descr: "Climatizzazione, pompe di calore, split",
+    img: "/images/categorie/clima.jpg",
+  },
+  {
+    id: "accumulo",
+    titolo: "Accumulo",
+    descr: "Sistemi di accumulo, batterie, gestione energia",
+    img: "/images/accumulo.png",
+  },
+  {
+    id: "fotovoltaico",
+    titolo: "Fotovoltaico",
+    descr: "Progettazione, installazione, storage",
+    img: "/images/pannelli.png",
+  },
+];
+
+const FAQLIST = [
+  {
+    q: "Come selezionate gli installatori?",
+    a: "Collaboriamo con professionisti verificati (documentazione, referenze e sopralluoghi campione). Aggiorniamo la rete in modo continuo e valutiamo i feedback post-intervento.",
+  },
+  {
+    q: "Quanto tempo serve per avere un preventivo?",
+    a: "Di solito entro 24–48 ore lavorative dopo la richiesta, in base alla complessità del lavoro e alla disponibilità nella tua zona.",
+  },
+  {
+    q: "È prevista una garanzia sui lavori?",
+    a: "Ogni intervento prevede standard di qualità e tracciabilità; la garanzia varia per tipologia di lavoro e fornitore. Viene indicata nel preventivo e in conferma d’ordine.",
+  },
+  {
+    q: "Coprite tutto il territorio nazionale?",
+    a: "Siamo operativi in molte province e la rete è in espansione. Inserisci CAP o seleziona la provincia per verificare la copertura attuale.",
+  },
+];
+
+// SOLO i 3 installatori principali
+const INSTALLATORI = [
   {
     id: 1,
-    nome: "Giuseppe Tieri",
-    azienda: "Tieri Impianti",
-    citta: "Corigliano Calabro",
-    provincia: "CS",
-    regione: "Calabria",
-    specializzazioni: ["Fotovoltaico", "Pompe di Calore"],
+    nome: "Mario Rossi Impianti",
+    provincia: "Milano (MI)",
     rating: 4.8,
-    recensioni: 24,
-    telefono: "+39 123 456 7890",
-    email: "giuseppe@tieriimpianti.it",
-    verificato: true,
-    dataRegistrazione: "2024-01-15"
+    categorie: ["Elettrico", "Fotovoltaico"],
+    tempi: "48h",
+    img: "/images/installatori/1.jpg",
   },
   {
     id: 2,
-    nome: "Marco Bianchi",
-    azienda: "Energia Verde Srl",
-    citta: "Cosenza",
-    provincia: "CS",
-    regione: "Calabria",
-    specializzazioni: ["Fotovoltaico", "Accumulo", "Mobilità Elettrica"],
+    nome: "Luca Bianchi Termoidraulica",
+    provincia: "Bologna (BO)",
     rating: 4.6,
-    recensioni: 18,
-    telefono: "+39 098 765 4321",
-    email: "marco@energiaverde.it",
-    verificato: true,
-    dataRegistrazione: "2024-02-20"
+    categorie: ["Idraulico", "Caldaie"],
+    tempi: "24h",
+    img: "/images/installatori/2.jpg",
   },
   {
     id: 3,
-    nome: "Luca Rossi",
-    azienda: "Impianti Sud",
-    citta: "Catanzaro",
-    provincia: "CZ",
-    regione: "Calabria",
-    specializzazioni: ["Pompe di Calore", "Accumulo"],
-    rating: 4.9,
-    recensioni: 31,
-    telefono: "+39 345 678 9012",
-    email: "luca@impiantisud.it",
-    verificato: true,
-    dataRegistrazione: "2023-11-10"
-  }
+    nome: "Giulia Verdi Clima",
+    provincia: "Roma (RM)",
+    rating: 4.7,
+    categorie: ["Clima / PDC"],
+    tempi: "72h",
+    img: "/images/installatori/3.jpg",
+  },  
 ];
 
-export default function Installatori() {
-  const [modalita, setModalita] = useState("ricerca");
-  const [ricerca, setRicerca] = useState("");
-  const [installatoreSelezionato, setInstallatoreSelezionato] = useState(null);
+export default function InstallatoriPage() {
+  const [cap, setCap] = useState("");
+  const [provincia, setProvincia] = useState("");
+  const [query, setQuery] = useState("");
 
-  const installatoriFiltrati = INSTALLATORI_MOCK.filter(installatore =>
-    installatore.citta.toLowerCase().includes(ricerca.toLowerCase()) ||
-    installatore.provincia.toLowerCase().includes(ricerca.toLowerCase()) ||
-    installatore.regione.toLowerCase().includes(ricerca.toLowerCase()) ||
-    installatore.nome.toLowerCase().includes(ricerca.toLowerCase()) ||
-    installatore.azienda.toLowerCase().includes(ricerca.toLowerCase())
-  );
+  const filtrati = useMemo(() => {
+    return INSTALLATORI.filter((x) => {
+      const okProv = provincia ? x.provincia === provincia : true;
+      const okQuery = query
+        ? x.nome.toLowerCase().includes(query.toLowerCase()) ||
+          x.categorie.join(" ").toLowerCase().includes(query.toLowerCase())
+        : true;
+      return okProv && okQuery;
+    });
+  }, [provincia, query]);
+
+  const topTre = filtrati.slice(0, 3);
+
+  const onVerificaCopertura = (e) => {
+    e.preventDefault();
+    const valido = /^\d{5}$/.test(cap);
+    alert(
+      valido
+        ? `Copertura in verifica per CAP ${cap}…`
+        : "Inserisci un CAP valido (5 cifre)."
+    );
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       <Navbar />
-      
-      {/* Header */}
-      <div className="bg-gradient-to-r from-orange-600 to-orange-700 text-white py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-4xl font-bold mb-4">
-            Rete Installatori Energy Planner
-          </h1>
-          <p className="text-xl text-orange-100 max-w-3xl mx-auto">
-            Trova installatori qualificati nella tua zona o entra a far parte della nostra rete professionale
-          </p>
-        </div>
-      </div>
 
-      {/* Selezione Modalità */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex justify-center mb-8">
-          <div className="bg-white rounded-lg p-2 shadow-md">
-            <button
-              onClick={() => setModalita("ricerca")}
-              className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
-                modalita === "ricerca"
-                  ? "bg-orange-600 text-white"
-                  : "text-gray-600 hover:text-orange-600"
-              }`}
-            >
-              🔍 Trova Installatore
-            </button>
-            <button
-              onClick={() => setModalita("registrazione-installatore")}
-              className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
-                modalita === "registrazione-installatore"
-                  ? "bg-orange-600 text-white"
-                  : "text-gray-600 hover:text-orange-600"
-              }`}
-            >
-              🔧 Diventa Installatore
-            </button>
-            <button
-              onClick={() => setModalita("registrazione-cliente")}
-              className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
-                modalita === "registrazione-cliente"
-                  ? "bg-orange-600 text-white"
-                  : "text-gray-600 hover:text-orange-600"
-              }`}
-            >
-              👤 Segnala Installatore
-            </button>
+      {/* HERO */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-orange-50 to-slate-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
+          <div className="grid md:grid-cols-2 gap-10 items-center">
+            <div>
+              <h1 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight">
+                La nostra rete di installatori è il tuo vantaggio.
+              </h1>
+              <p className="mt-5 text-lg text-gray-600">
+                Collaboriamo con professionisti selezionati per garantire
+                preventivi chiari, lavori tracciabili e interventi eseguiti a
+                regola d’arte.
+              </p>
+              <div className="mt-8 flex flex-col sm:flex-row gap-3">
+                <a
+                  href="#trova"
+                  className="inline-flex justify-center items-center rounded-full bg-orange-600 text-white px-6 py-3 font-semibold hover:bg-orange-700"
+                >
+                  Trova un installatore
+                </a>
+                <Link
+                  to="/lavora-con-noi"
+                  className="inline-flex justify-center items-center rounded-full border-2 border-orange-600 text-orange-600 px-6 py-3 font-semibold hover:bg-orange-50"
+                >
+                  Entra nella rete
+                </Link>
+              </div>
+              <p className="mt-4 text-xs text-gray-500">
+                Rete in espansione e copertura crescente nelle principali
+                province italiane.
+              </p>
+            </div>
+
+            <div className="h-72 md:h-96 rounded-3xl bg-gray-200 overflow-hidden">
+              <img
+                src="/images/tecnici.png"
+                alt="Tecnici al lavoro"
+                className="w-full h-full object-cover"
+              />
+            </div>
           </div>
         </div>
+      </section>
 
-        {/* Contenuto basato sulla modalità */}
-        {modalita === "ricerca" && (
-          <RicercaInstallatori
-            ricerca={ricerca}
-            setRicerca={setRicerca}
-            installatori={installatoriFiltrati}
-            onSeleziona={setInstallatoreSelezionato}
-          />
-        )}
-
-        {modalita === "registrazione-installatore" && <RegistrazioneInstallatore />}
-        {modalita === "registrazione-cliente" && <RegistrazioneCliente />}
-      </div>
-
-      {/* Modal Dettagli Installatore */}
-      {installatoreSelezionato && (
-        <ModalDettagliInstallatore
-          installatore={installatoreSelezionato}
-          onClose={() => setInstallatoreSelezionato(null)}
-        />
-      )}
-    </div>
-  );
-}
-
-function Navbar() {
-  return (
-    <nav className="bg-white shadow-sm border-b border-gray-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          <Link to="/" className="flex items-center space-x-2">
-            <img 
-              src="/images/logo.png" 
-              alt="Energy Planner" 
-              className="h-12 w-auto"
+      {/* BENEFIT */}
+      <section className="py-14">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid md:grid-cols-3 gap-6">
+            <Benefit
+              title="Preventivi chiari"
+              text="Ricevi proposte trasparenti e coerenti con la tua richiesta, prima dell’intervento."
             />
-          </Link>
-
-          <div className="flex items-center space-x-6">
-            <Link to="/" className="text-gray-700 hover:text-orange-600 font-medium">
-              Home
-            </Link>
-            <Link to="/ecommerce" className="text-gray-700 hover:text-orange-600 font-medium">
-              Ecommerce
-            </Link>
-            <Link to="/dashboard" className="text-gray-700 hover:text-orange-600 font-medium">
-              Dashboard
-            </Link>
+            <Benefit
+              title="Professionisti verificati"
+              text="Documenti, referenze e qualità verificate: lavoriamo solo con installatori qualificati."
+            />
+            <Benefit
+              title="Garanzia sul lavoro"
+              text="Ogni lavoro è tracciato; la garanzia viene indicata nell’offerta e nel contratto."
+            />
           </div>
         </div>
-      </div>
-    </nav>
-  );
-}
+      </section>
 
-function RicercaInstallatori({ ricerca, setRicerca, installatori, onSeleziona }) {
-  return (
-    <div className="max-w-4xl mx-auto">
-      <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">
-          Trova il tuo installatore di fiducia
-        </h2>
-        <div className="relative">
-          <input
-            type="text"
-            placeholder="Cerca per città, provincia o nome installatore..."
-            value={ricerca}
-            onChange={(e) => setRicerca(e.target.value)}
-            className="w-full px-4 py-3 pl-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-          />
-          <svg className="absolute left-4 top-3.5 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-        </div>
-      </div>
+      {/* SEZIONE RETE / COPERTURA + 3 INSTALLATORI */}
+      <section id="trova" className="py-16 bg-gray-50 border-y">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-[1fr,420px] gap-10 items-start">
+            {/* Ricerca */}
+            <div>
+              <h2 className="text-2xl md:text-3xl font-bold text-gray-900">
+                Verifica copertura e trova il tuo tecnico
+              </h2>
+              <p className="mt-2 text-gray-600">
+                Seleziona la provincia o inserisci il CAP per controllare la
+                disponibilità. Poi filtra per categoria o nome.
+              </p>
 
-      <div className="grid gap-6">
-        {installatori.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-gray-500 text-lg">
-              Nessun installatore trovato per la tua ricerca.
-            </p>
-          </div>
-        ) : (
-          installatori.map((installatore) => (
-            <div key={installatore.id} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
-              <div className="flex justify-between items-start">
-                <div className="flex-1">
-                  <div className="flex items-center mb-2">
-                    <h3 className="text-xl font-bold text-gray-900 mr-3">
-                      {installatore.nome}
-                    </h3>
-                    {installatore.verificato && (
-                      <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full font-semibold">
-                        ✓ Verificato
-                      </span>
-                    )}
-                  </div>
-                  
-                  <p className="text-lg text-gray-600 mb-2">{installatore.azienda}</p>
-                  
-                  <div className="flex items-center text-gray-600 mb-3">
-                    <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    {installatore.citta}, {installatore.provincia} ({installatore.regione})
-                  </div>
+              <div className="mt-6 grid sm:grid-cols-2 gap-3">
+                <select
+                  className="rounded-xl border-gray-300 focus:ring-0 focus:border-orange-500"
+                  value={provincia}
+                  onChange={(e) => setProvincia(e.target.value)}
+                >
+                  <option value="">Tutte le province</option>
+                  {PROVINCE.map((p) => (
+                    <option key={p} value={p}>
+                      {p}
+                    </option>
+                  ))}
+                </select>
 
-                  <div className="flex items-center mb-3">
-                    <div className="flex text-yellow-400 mr-2">
-                      {[...Array(5)].map((_, i) => (
-                        <svg key={i} className={`h-4 w-4 ${i < Math.floor(installatore.rating) ? 'fill-current' : 'text-gray-300'}`} viewBox="0 0 20 20">
-                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                      ))}
-                    </div>
-                    <span className="text-sm text-gray-600">
-                      {installatore.rating} ({installatore.recensioni} recensioni)
-                    </span>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2">
-                    {installatore.specializzazioni.map((spec, index) => (
-                      <span key={index} className="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm">
-                        {spec}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-2 ml-6">
-                  <button
-                    onClick={() => onSeleziona(installatore)}
-                    className="bg-orange-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-orange-700 transition-colors"
-                  >
-                    Contatta
+                <form onSubmit={onVerificaCopertura} className="flex gap-2">
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={5}
+                    placeholder="Inserisci CAP"
+                    className="flex-1 rounded-xl border-gray-300 focus:ring-0 focus:border-orange-500"
+                    value={cap}
+                    onChange={(e) =>
+                      setCap(e.target.value.replace(/\D/g, "").slice(0, 5))
+                    }
+                  />
+                  <button className="rounded-xl bg-orange-600 text-white px-4 font-semibold hover:bg-orange-700">
+                    Verifica
                   </button>
+                </form>
+
+                <input
+                  type="text"
+                  placeholder="Cerca per nome o categoria (es. Fotovoltaico)"
+                  className="sm:col-span-2 rounded-xl border-gray-300 focus:ring-0 focus:border-orange-500"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                />
+              </div>
+
+              {/* Top 3 risultati */}
+              <div className="mt-8 grid md:grid-cols-2 xl:grid-cols-3 gap-6">
+                {topTre.map((r) => (
+                  <CardInstallatore key={r.id} {...r} />
+                ))}
+                {topTre.length === 0 && (
+                  <div className="col-span-full text-sm text-gray-500">
+                    Nessun risultato con i filtri selezionati.
+                  </div>
+                )}
+              </div>
+
+              {/* Vedi tutti (se vuoi puoi rimuovere questo blocco, ora mostra comunque solo i 3) */}
+              {filtrati.length > 2 && (
+                <div className="mt-6">
                   <a
-                    href={`tel:${installatore.telefono}`}
-                    className="border border-orange-600 text-orange-600 px-6 py-2 rounded-lg font-semibold text-center hover:bg-orange-50 transition-colors"
+                    href="/installatori-tutti"
+                    className="inline-flex items-center rounded-full border-2 border-orange-600 text-orange-600 px-6 py-3 font-semibold hover:bg-orange-50"
                   >
-                    Chiama
+                    Vedi tutti gli installatori
+                    <svg
+                      className="ml-2 h-4 w-4"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      fill="none"
+                    >
+                      <path
+                        d="M9 5l7 7-7 7"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
                   </a>
                 </div>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
-    </div>
-  );
-}
-
-function RegistrazioneInstallatore() {
-  const [form, setForm] = useState({
-    nome: "",
-    cognome: "",
-    azienda: "",
-    email: "",
-    telefono: "",
-    citta: "",
-    provincia: "",
-    regione: "",
-    specializzazioni: [],
-    esperienza: "",
-    descrizione: ""
-  });
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log("Registrazione installatore:", form);
-    alert("Registrazione inviata! Ti contatteremo presto per la verifica.");
-  };
-
-  const toggleSpecializzazione = (spec) => {
-    setForm(prev => ({
-      ...prev,
-      specializzazioni: prev.specializzazioni.includes(spec)
-        ? prev.specializzazioni.filter(s => s !== spec)
-        : [...prev.specializzazioni, spec]
-    }));
-  };
-
-  const specializzazioniDisponibili = [
-    "Fotovoltaico",
-    "Pompe di Calore",
-    "Accumulo",
-    "Mobilità Elettrica",
-    "Efficientamento Energetico"
-  ];
-
-  return (
-    <div className="max-w-2xl mx-auto">
-      <div className="bg-white rounded-lg shadow-md p-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">
-          Entra nella Rete Energy Planner
-        </h2>
-        
-        <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6">
-          <h3 className="font-semibold text-orange-800 mb-2">Vantaggi per gli Installatori:</h3>
-          <ul className="text-orange-700 text-sm space-y-1">
-            <li>• Registrazione completamente gratuita</li>
-            <li>• Ricevi richieste di lavoro qualificate</li>
-            <li>• Aumenta la tua visibilità online</li>
-            <li>• Accesso a prodotti scontati</li>
-            <li>• Supporto tecnico dedicato</li>
-          </ul>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Nome *
-              </label>
-              <input
-                type="text"
-                required
-                value={form.nome}
-                onChange={(e) => setForm({...form, nome: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Cognome *
-              </label>
-              <input
-                type="text"
-                required
-                value={form.cognome}
-                onChange={(e) => setForm({...form, cognome: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
+              )}
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Azienda *
-            </label>
-            <input
-              type="text"
-              required
-              value={form.azienda}
-              onChange={(e) => setForm({...form, azienda: e.target.value})}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Email *
-              </label>
-              <input
-                type="email"
-                required
-                value={form.email}
-                onChange={(e) => setForm({...form, email: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Telefono *
-              </label>
-              <input
-                type="tel"
-                required
-                value={form.telefono}
-                onChange={(e) => setForm({...form, telefono: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Città *
-              </label>
-              <input
-                type="text"
-                required
-                value={form.citta}
-                onChange={(e) => setForm({...form, citta: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Provincia *
-              </label>
-              <input
-                type="text"
-                required
-                value={form.provincia}
-                onChange={(e) => setForm({...form, provincia: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Regione *
-              </label>
-              <input
-                type="text"
-                required
-                value={form.regione}
-                onChange={(e) => setForm({...form, regione: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Specializzazioni *
-            </label>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              {specializzazioniDisponibili.map((spec) => (
-                <label key={spec} className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={form.specializzazioni.includes(spec)}
-                    onChange={() => toggleSpecializzazione(spec)}
-                    className="mr-2 text-orange-600 focus:ring-orange-500"
-                  />
-                  <span className="text-sm text-gray-700">{spec}</span>
-                </label>
+          {/* Categorie */}
+          <div className="mt-14">
+            <h3 className="text-xl font-bold text-gray-900">
+              Interventi e competenze
+            </h3>
+            <div className="mt-6 grid md:grid-cols-3 xl:grid-cols-5 gap-6">
+              {CATEGORIE.map((c) => (
+                <div
+                  key={c.id}
+                  className="rounded-2xl border bg-white overflow-hidden hover:shadow-md transition-shadow"
+                >
+                  <div className="h-36 bg-gray-100 overflow-hidden">
+                    <img
+                      src={c.img}
+                      alt={c.titolo}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="p-4">
+                    <h4 className="font-semibold text-gray-900">{c.titolo}</h4>
+                    <p className="text-sm text-gray-600">{c.descr}</p>
+                  </div>
+                </div>
               ))}
             </div>
           </div>
+        </div>
+      </section>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Anni di Esperienza *
-            </label>
-            <select
-              required
-              value={form.esperienza}
-              onChange={(e) => setForm({...form, esperienza: e.target.value})}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-            >
-              <option value="">Seleziona...</option>
-              <option value="1-2">1-2 anni</option>
-              <option value="3-5">3-5 anni</option>
-              <option value="6-10">6-10 anni</option>
-              <option value="10+">Oltre 10 anni</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Descrizione della tua attività
-            </label>
-            <textarea
-              rows={4}
-              value={form.descrizione}
-              onChange={(e) => setForm({...form, descrizione: e.target.value})}
-              placeholder="Racconta brevemente la tua esperienza e i servizi che offri..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+      {/* COME FUNZIONA */}
+      <section className="py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900">
+            Come funziona
+          </h2>
+          <div className="mt-8 grid md:grid-cols-3 gap-6">
+            <Step
+              n="1"
+              title="Raccontaci l’esigenza"
+              text="Compila il form o seleziona il servizio. Più dettagli = preventivo più preciso."
+            />
+            <Step
+              n="2"
+              title="Matching con la rete"
+              text="Ti mettiamo in contatto con i partner più adatti nella tua zona."
+            />
+            <Step
+              n="3"
+              title="Sopralluogo & preventivo"
+              text="Conferma l’intervento con quotazione trasparente e tempi chiari."
             />
           </div>
+        </div>
+      </section>
 
-          <button
-            type="submit"
-            className="w-full bg-orange-600 text-white py-3 rounded-lg font-semibold hover:bg-orange-700 transition-colors"
+      {/* CTA PARTNER */}
+      <section className="py-16 bg-orange-600 text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-3xl font-bold">
+            Sei un installatore? Unisciti alla rete
+          </h2>
+          <p className="mt-2 opacity-90">
+            Inviaci le tue referenze: formazione, documenti e specializzazioni.
+            Cresciamo insieme.
+          </p>
+          <Link
+            to="/diventa-partner"
+            className="mt-6 inline-flex items-center rounded-full bg-white text-orange-600 px-8 py-3 font-semibold hover:bg-gray-100"
           >
-            Invia Richiesta di Registrazione
-          </button>
-        </form>
-      </div>
-    </div>
-  );
-}
+            Candidati ora
+            <svg
+              className="ml-2 h-5 w-5"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              fill="none"
+            >
+              <path
+                d="M9 5l7 7-7 7"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </Link>
+        </div>
+      </section>
 
-function RegistrazioneCliente() {
-  const [form, setForm] = useState({
-    nome: "",
-    email: "",
-    telefono: "",
-    nomeInstallatore: "",
-    aziendaInstallatore: "",
-    cittaInstallatore: "",
-    telefonoInstallatore: "",
-    emailInstallatore: "",
-    motivazione: ""
-  });
+      {/* FAQ */}
+      <section className="py-16 bg-white">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 text-center">
+            Domande frequenti
+          </h2>
+          <div className="mt-8 divide-y rounded-2xl border bg-white">
+            {FAQLIST.map((f, idx) => (
+              <details
+                key={idx}
+                className="group p-6 [&_summary::-webkit-details-marker]:hidden"
+              >
+                <summary className="flex cursor-pointer list-none items-center justify-between">
+                  <span className="font-semibold text-gray-900">{f.q}</span>
+                  <span className="ml-4 text-gray-400 group-open:hidden">
+                    ＋
+                  </span>
+                  <span className="ml-4 text-gray-400 hidden group-open:block">
+                    －
+                  </span>
+                </summary>
+                <p className="mt-3 text-gray-600">{f.a}</p>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log("Segnalazione installatore:", form);
-    alert("Segnalazione inviata! Verificheremo l'installatore e lo contatteremo.");
-  };
-
-  return (
-    <div className="max-w-2xl mx-auto">
-      <div className="bg-white rounded-lg shadow-md p-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">
-          Segnala un Installatore di Fiducia
-        </h2>
-        
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-          <h3 className="font-semibold text-blue-800 mb-2">Aiutaci a crescere!</h3>
-          <p className="text-blue-700 text-sm">
-            Conosci un installatore bravo e affidabile? Segnalacelo e lo inviteremo 
-            a entrare nella nostra rete. Riceverai uno sconto del 5% sul tuo prossimo acquisto!
+      {/* CONTATTO RAPIDO */}
+      <section className="py-16 bg-gray-50">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 text-center">
+            Richiedi un contatto
+          </h2>
+          <p className="mt-2 text-center text-gray-600">
+            Lascia i tuoi dati: ti richiamiamo velocemente.
+          </p>
+          <form className="mt-8 grid sm:grid-cols-2 gap-4">
+            <input
+              className="rounded-xl border-gray-300 focus:ring-0 focus:border-orange-500"
+              placeholder="Nome e Cognome"
+            />
+            <input
+              className="rounded-xl border-gray-300 focus:ring-0 focus:border-orange-500"
+              placeholder="Email"
+              type="email"
+            />
+            <input
+              className="rounded-xl border-gray-300 focus:ring-0 focus:border-orange-500 sm:col-span-2"
+              placeholder="Telefono"
+              type="tel"
+            />
+            <textarea
+              className="rounded-xl border-gray-300 focus:ring-0 focus:border-orange-500 sm:col-span-2"
+              rows="4"
+              placeholder="Descrivi in breve la richiesta"
+            />
+            <button className="sm:col-span-2 rounded-full bg-orange-600 text-white px-6 py-3 font-semibold hover:bg-orange-700">
+              Invia richiesta
+            </button>
+          </form>
+          <p className="mt-3 text-xs text-gray-500 text-center">
+            Inviando, accetti la nostra informativa privacy e il trattamento dei
+            dati per ricontattarti.
           </p>
         </div>
+      </section>
+    </div>
+  );
+}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="border-b border-gray-200 pb-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">I tuoi dati</h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Il tuo nome *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={form.nome}
-                  onChange={(e) => setForm({...form, nome: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                />
-              </div>
+/* ============= Sub-components ============= */
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  La tua email *
-                </label>
-                <input
-                  type="email"
-                  required
-                  value={form.email}
-                  onChange={(e) => setForm({...form, email: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                />
-              </div>
-            </div>
+function Benefit({ title, text }) {
+  return (
+    <div className="rounded-2xl border bg-white p-6">
+      <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+      <p className="mt-2 text-gray-600">{text}</p>
+    </div>
+  );
+}
 
-            <div className="mt-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Il tuo telefono
-              </label>
-              <input
-                type="tel"
-                value={form.telefono}
-                onChange={(e) => setForm({...form, telefono: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
-            </div>
-          </div>
-
+function CardInstallatore({ nome, provincia, rating, categorie, tempi, img }) {
+  return (
+    <div className="rounded-2xl border bg-white overflow-hidden hover:shadow-md transition-shadow">
+      <div className="h-40 bg-gray-100 overflow-hidden">
+        <img src={img} alt={nome} className="w-full h-full object-cover" />
+      </div>
+      <div className="p-4">
+        <div className="flex items-start justify-between gap-3">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Dati dell'installatore</h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Nome installatore *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={form.nomeInstallatore}
-                  onChange={(e) => setForm({...form, nomeInstallatore: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Azienda
-                </label>
-                <input
-                  type="text"
-                  value={form.aziendaInstallatore}
-                  onChange={(e) => setForm({...form, aziendaInstallatore: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Città *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={form.cittaInstallatore}
-                  onChange={(e) => setForm({...form, cittaInstallatore: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Telefono
-                </label>
-                <input
-                  type="tel"
-                  value={form.telefonoInstallatore}
-                  onChange={(e) => setForm({...form, telefonoInstallatore: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  value={form.emailInstallatore}
-                  onChange={(e) => setForm({...form, emailInstallatore: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                />
-              </div>
-            </div>
+            <h4 className="font-semibold text-gray-900">{nome}</h4>
+            <p className="text-sm text-gray-600">{provincia}</p>
           </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Perché lo consigli? *
-            </label>
-            <textarea
-              rows={4}
-              required
-              value={form.motivazione}
-              onChange={(e) => setForm({...form, motivazione: e.target.value})}
-              placeholder="Racconta la tua esperienza con questo installatore..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-            />
+          <div className="shrink-0 rounded-full bg-green-100 px-2 py-1 text-xs font-semibold text-green-700">
+            ★ {rating.toFixed(1)}
           </div>
-
-          <button
-            type="submit"
-            className="w-full bg-orange-600 text-white py-3 rounded-lg font-semibold hover:bg-orange-700 transition-colors"
+        </div>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {categorie.map((c) => (
+            <span
+              key={c}
+              className="rounded-full bg-orange-100 text-orange-800 text-xs px-2 py-1"
+            >
+              {c}
+            </span>
+          ))}
+        </div>
+        <div className="mt-4 flex items-center justify-between">
+          <span className="text-sm text-gray-500">Disponibilità: {tempi}</span>
+          <Link
+            to="/ecommerce"
+            className="text-sm font-semibold text-orange-600 hover:text-orange-700 inline-flex items-center"
           >
-            Invia Segnalazione
-          </button>
-        </form>
+            Richiedi preventivo
+            <svg
+              className="ml-1 h-4 w-4"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              fill="none"
+            >
+              <path
+                d="M9 5l7 7-7 7"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </Link>
+        </div>
       </div>
     </div>
   );
 }
 
-function ModalDettagliInstallatore({ installatore, onClose }) {
-  const [messaggioInviato, setMessaggioInviato] = useState(false);
-  const [messaggio, setMessaggio] = useState("");
-
-  const inviaMessaggio = () => {
-    console.log("Messaggio inviato a", installatore.nome, ":", messaggio);
-    setMessaggioInviato(true);
-    setTimeout(() => {
-      setMessaggioInviato(false);
-      setMessaggio("");
-      onClose();
-    }, 2000);
-  };
-
+function Step({ n, title, text }) {
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto" onClick={onClose}>
-      <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center">
-        {/* Overlay */}
-        <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" aria-hidden="true"></div>
-
-        {/* Modal */}
-        <div 
-          className="relative inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="bg-white px-6 pt-6 pb-6">
-            <div className="flex justify-between items-start mb-6">
-              <div>
-                <h3 className="text-2xl font-bold text-gray-900">
-                  {installatore.nome}
-                </h3>
-                <p className="text-lg text-gray-600">{installatore.azienda}</p>
-              </div>
-              <button
-                onClick={onClose}
-                className="text-gray-400 hover:text-gray-600 p-1"
-              >
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            <div className="space-y-4 mb-6">
-              <div className="flex items-center text-gray-600">
-                <svg className="h-5 w-5 mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                {installatore.citta}, {installatore.provincia} ({installatore.regione})
-              </div>
-
-              <div className="flex items-center text-gray-600">
-                <svg className="h-5 w-5 mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                </svg>
-                {installatore.telefono}
-              </div>
-
-              <div className="flex items-center text-gray-600">
-                <svg className="h-5 w-5 mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-                {installatore.email}
-              </div>
-
-              <div className="flex items-center">
-                <div className="flex text-yellow-400 mr-2">
-                  {[...Array(5)].map((_, i) => (
-                    <svg key={i} className={`h-5 w-5 ${i < Math.floor(installatore.rating) ? 'fill-current' : 'text-gray-300'}`} viewBox="0 0 20 20">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                  ))}
-                </div>
-                <span className="text-gray-600">
-                  {installatore.rating} ({installatore.recensioni} recensioni)
-                </span>
-              </div>
-
-              <div>
-                <h4 className="font-semibold text-gray-900 mb-2">Specializzazioni:</h4>
-                <div className="flex flex-wrap gap-2">
-                  {installatore.specializzazioni.map((spec, index) => (
-                    <span key={index} className="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm">
-                      {spec}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {!messaggioInviato ? (
-              <div className="border-t pt-4">
-                <h4 className="font-semibold text-gray-900 mb-2">Invia un messaggio:</h4>
-                <textarea
-                  value={messaggio}
-                  onChange={(e) => setMessaggio(e.target.value)}
-                  rows={4}
-                  placeholder="Descrivi il tuo progetto e le tue esigenze..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 mb-4"
-                />
-                <div className="flex gap-3">
-                  <button
-                    onClick={onClose}
-                    className="flex-1 border border-gray-300 text-gray-700 py-2 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
-                  >
-                    Chiudi
-                  </button>
-                  <a
-                    href={`tel:${installatore.telefono}`}
-                    className="flex-1 border border-orange-600 text-orange-600 py-2 rounded-lg font-semibold text-center hover:bg-orange-50 transition-colors"
-                  >
-                    Chiama Ora
-                  </a>
-                  <button
-                    onClick={inviaMessaggio}
-                    disabled={!messaggio.trim()}
-                    className="flex-1 bg-orange-600 text-white py-2 rounded-lg font-semibold hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Invia Messaggio
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="text-center py-8 border-t">
-                <div className="text-green-500 text-6xl mb-4">✓</div>
-                <h4 className="text-xl font-semibold text-gray-900 mb-2">
-                  Messaggio Inviato!
-                </h4>
-                <p className="text-gray-600">
-                  {installatore.nome} riceverà il tuo messaggio e ti contatterà presto.
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
+    <div className="rounded-2xl border bg-white p-6">
+      <div className="w-10 h-10 rounded-full bg-orange-600 text-white flex items-center justify-center font-bold">
+        {n}
       </div>
+      <h3 className="mt-4 text-lg font-semibold text-gray-900">{title}</h3>
+      <p className="mt-2 text-gray-600">{text}</p>
     </div>
   );
 }

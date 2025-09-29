@@ -1,43 +1,66 @@
 import React from "react";
 import { Link } from "react-router-dom";
-
-// Array dei servizi offerti
+import Navbar from "./components/NavBar.jsx";
+/* ======== SERVIZI (con immagine) ======== */
 const SERVIZI = [
   {
     id: "conto-termico",
     titolo: "Conto Termico 3.0",
-    descrizione: "Incentivi fino al 65% per pompe di calore, fotovoltaico e efficienza energetica",
-    icona: "🔥",
+    descrizione:
+      "Incentivi fino al 65% per pompe di calore, fotovoltaico ed efficienza energetica.",
     link: "/conto-termico",
-    videoPlaceholder: true
+    img: "/images/conto.png",
+    external: false,
   },
   {
     id: "energy-planning",
     titolo: "Energy Planning",
-    descrizione: "Consulenza personalizzata per ottimizzare i consumi energetici della tua abitazione",
-    icona: "⚡",
-    link: "/energy-planning",
-    videoPlaceholder: true
+    descrizione:
+      "Consulenza personalizzata per ottimizzare i consumi energetici della tua abitazione.",
+    link: "https://energyplanner.it",
+    img: "/images/casa-pannelli.png",
+    external: true,
   },
   {
     id: "rete-installatori",
     titolo: "Rete Installatori",
-    descrizione: "Connessione diretta con installatori qualificati nella tua zona",
-    icona: "🔧",
+    descrizione:
+      "Connessione diretta con installatori qualificati nella tua zona.",
     link: "/installatori",
-    videoPlaceholder: true
+    img: "/images/rete.png",
+    external: false,
   },
   {
     id: "consulenza-agenti",
     titolo: "Consulenza Agenti",
-    descrizione: "Supporto completo per agenti che vendono soluzioni energetiche",
-    icona: "👥",
+    descrizione:
+      "Supporto completo per agenti che vendono soluzioni energetiche.",
     link: "/agenti",
-    videoPlaceholder: true
-  }
+    img: "/images/consulenza.png",
+    external: false,
+  },
+  /* === NUOVA CARD CER === */
+  {
+    id: "cer",
+    titolo: "CER – Comunità Energetiche",
+    descrizione:
+      "Partecipa o crea una Comunità Energetica Rinnovabile e valorizza la tua energia.",
+    link: "https://expoenergia.cer-italia.energy/",
+    img: "/images/cerimage.png",
+    external: true,
+  },
+  {
+    id: "assicurazioni-casa",
+    titolo: "Casa Sicura",
+    descrizione:
+      "Proteggi la tua casa con le migliori soluzioni assicurative.",
+    link: "/casa-sicura",
+    img: "/images/casasicura.png",
+    external: false,
+  },
 ];
 
-// Array dei prodotti
+/* ======== PRODOTTI ======== */
 const PRODOTTI = [
   {
     id: "kit-fotovoltaico",
@@ -45,7 +68,6 @@ const PRODOTTI = [
     descrizione: "Sistemi fotovoltaici completi con installazione inclusa",
     immagine: "/images/pannelli.png",
     categoria: "Energia Rinnovabile",
-    videoPlaceholder: true
   },
   {
     id: "pompe-calore",
@@ -53,41 +75,51 @@ const PRODOTTI = [
     descrizione: "Sistemi di riscaldamento e raffrescamento ad alta efficienza",
     immagine: "/images/pompa.png",
     categoria: "Riscaldamento",
-    videoPlaceholder: true
   },
   {
     id: "batterie-accumulo",
     nome: "Batterie di Accumulo",
     descrizione: "Sistemi di storage per massimizzare l'autoconsumo",
-    immagine: "/images/batteria.png",
+    immagine: "/images/accumulo.png",
     categoria: "Storage",
-    videoPlaceholder: true
   },
   {
-    id: "colonnine-ricarica",
-    nome: "Colonnine di Ricarica",
-    descrizione: "Stazioni di ricarica per veicoli elettrici domestiche",
-    immagine: "/images/colonnina.png",
+    id: "pacchetti-efficienza",
+    nome: "Pacchetti di Efficienza Energetica",
+    descrizione:
+      "Pacchetti completi per l'isolamento e l'efficienza energetica",
+    immagine: "/images/pacchetto.png",
     categoria: "Mobilità Elettrica",
-    videoPlaceholder: true
-  }
+  },
 ];
 
+/* ======== ASSISTENZA ======== */
 const ASSISTENZA = [
   {
     id: "supporto-tecnico",
     titolo: "Supporto Tecnico",
-    descrizione: "Assistenza per l'installazione e la manutenzione dei prodotti",
-    icona: "🛠️"
+    descrizione:
+      "Assistenza per l'installazione e la manutenzione dei prodotti.",
   },
   {
     id: "consulenza-energetica",
     titolo: "Consulenza Energetica",
-    descrizione: "Consigli per ottimizzare i consumi energetici e ridurre gli sprechi,",
-    icona: "💡"
-  }
-]
-    
+    descrizione:
+      "Consigli per ottimizzare i consumi energetici e ridurre gli sprechi.",
+  },
+  {
+    id: "controllo-remoto",
+    titolo: "Controllo Remoto",
+    descrizione:
+      "Monitoraggio e gestione da remoto dei sistemi installati.",
+  },
+  {
+    id: "agente-dedicato",
+    titolo: "Agente Dedicato",
+    descrizione:
+      "Supporto personalizzato da un agente dedicato per le tue esigenze energetiche.",
+  },
+];
 
 export default function App() {
   return (
@@ -102,90 +134,32 @@ export default function App() {
   );
 }
 
-function Navbar() {
-  return (
-    <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          {/* Logo */}
-          <div className="flex items-center">
-            <Link to="/" className="flex items-center space-x-2">
-              <img 
-                src="/images/logo.png" 
-                alt="MeglioEfficientare" 
-                className="h-12 w-auto"
-              />
-            </Link>
-          </div>
 
-          {/* Menu di navigazione */}
-          <div className="hidden md:flex items-center space-x-8">
-            <a 
-              href="#chi-siamo" 
-              className="text-gray-700 hover:text-orange-600 font-medium transition-colors"
-            >
-              Chi Siamo
-            </a>
-            <a 
-              href="#servizi" 
-              className="text-gray-700 hover:text-orange-600 font-medium transition-colors"
-            >
-              I Nostri Servizi
-            </a>
-            <a 
-              href="#prodotti" 
-              className="text-gray-700 hover:text-orange-600 font-medium transition-colors"
-            >
-              I Nostri Prodotti
-            </a>
-            <a 
-              href="#assistenza" 
-              className="text-gray-700 hover:text-orange-600 font-medium transition-colors"
-            >
-              Assistenza
-            </a>
-          </div>
-
-          {/* Menu mobile */}
-          <div className="md:hidden">
-            <button className="text-gray-700 hover:text-orange-600">
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
-          </div>
-        </div>
-      </div>
-    </nav>
-  );
-}
 
 function Hero() {
   return (
     <section className="bg-gradient-to-br from-orange-50 to-slate-50 py-20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center">
-          <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
-            Meglio Efficientare
-          </h1>
-          <p className="text-xl md:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto">
-            La tua piattaforma completa per l'efficienza energetica. 
-            Connettendo agenti, installatori e clienti per un futuro sostenibile.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a 
-              href="#servizi"
-              className="bg-orange-600 text-white px-8 py-4 rounded-full text-lg font-semibold hover:bg-orange-700 transition-colors"
-            >
-              Scopri i Nostri Servizi
-            </a>
-            <a 
-              href="#prodotti"
-              className="border-2 border-orange-600 text-orange-600 px-8 py-4 rounded-full text-lg font-semibold hover:bg-orange-600 hover:text-white transition-colors"
-            >
-              Vedi i Prodotti
-            </a>
-          </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
+          Meglio Efficientare
+        </h1>
+        <p className="text-xl md:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto">
+          La piattaforma completa per l'efficienza energetica: agenti,
+          installatori e clienti connessi per un futuro sostenibile.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <a
+            href="#servizi"
+            className="bg-orange-600 text-white px-8 py-4 rounded-full text-lg font-semibold hover:bg-orange-700 transition-colors"
+          >
+            Scopri i Servizi
+          </a>
+          <a
+            href="/conto-termico"
+            className="border-2 border-orange-600 text-orange-600 px-8 py-4 rounded-full text-lg font-semibold hover:bg-orange-600 hover:text-white transition-colors"
+          >
+            Scopri il Conto Termico 3.0
+          </a>
         </div>
       </div>
     </section>
@@ -201,42 +175,72 @@ function ServiziSection() {
             I Nostri Servizi
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Soluzioni complete per ogni esigenza energetica, dalla consulenza all'installazione
+            Soluzioni complete per ogni esigenza energetica, dalla consulenza
+            all'installazione.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {SERVIZI.map((servizio) => (
-            <div key={servizio.id} className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-shadow">
-              {/* Spazio per video illustrativo */}
-              {servizio.videoPlaceholder && (
-                <div className="h-48 bg-gradient-to-br from-orange-100 to-orange-200 flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="text-4xl mb-2">{servizio.icona}</div>
-                    <p className="text-sm text-gray-600">Spazio per video illustrativo</p>
+        {/* 5 card in riga su desktop */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6">
+          {SERVIZI.map((s) => {
+            const CardInner = (
+              <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-shadow h-full flex flex-col">
+                {/* immagine uniforme */}
+                {s.img && (
+                  <div className="w-full aspect-[16/9] overflow-hidden">
+                    <img
+                      src={s.img}
+                      alt={s.titolo}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    />
                   </div>
-                </div>
-              )}
+                )}
 
-              <div className="p-6">
-                <h3 className="text-xl font-semibold text-gray-900 mb-3">
-                  {servizio.titolo}
-                </h3>
-                <p className="text-gray-600 mb-4">
-                  {servizio.descrizione}
-                </p>
-                <Link
-                  to={servizio.link}
-                  className="inline-flex items-center text-orange-600 font-semibold hover:text-orange-700"
-                >
-                  Scopri di più
-                  <svg className="ml-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </Link>
+                {/* contenuto */}
+                <div className="p-6 flex flex-col grow">
+                  <h3 className="text-xl font-semibold text-gray-900 mb-3">
+                    {s.titolo}
+                  </h3>
+                  <p className="text-gray-600 mb-6">{s.descrizione}</p>
+
+                  {/* CTA in basso */}
+                  <span className="mt-auto inline-flex items-center text-orange-600 font-semibold">
+                    Scopri di più
+                    <svg
+                      className="ml-2 h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 5l7 7-7 7"
+                      />
+                    </svg>
+                  </span>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+
+            return s.external ? (
+              <a
+                key={s.id}
+                href={s.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block"
+              >
+                {CardInner}
+              </a>
+            ) : (
+              <Link key={s.id} to={s.link} className="block">
+                {CardInner}
+              </Link>
+            );
+          })}
         </div>
       </div>
     </section>
@@ -251,42 +255,44 @@ function ProdottiSection() {
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
             I Nostri Prodotti
           </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Kit completi per l'efficienza energetica con installazione garantita
-          </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {PRODOTTI.map((prodotto) => (
-            <div key={prodotto.id} className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-shadow">
-              {/* Spazio per video illustrativo */}
-              {prodotto.videoPlaceholder && (
-                <div className="h-48 bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center">
-                  <div className="text-center">
-                    <p className="text-sm text-gray-600">Spazio per video prodotto</p>
-                  </div>
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {PRODOTTI.map((p) => (
+            <div
+              key={p.id}
+              className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-shadow h-full flex flex-col"
+            >
+              {/* immagine uniforme */}
+              {p.immagine && (
+                <div className="w-full aspect-[16/9] overflow-hidden">
+                  <img
+                    src={p.immagine}
+                    alt={p.nome}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
                 </div>
               )}
 
-              <div className="p-6">
+              {/* contenuto */}
+              <div className="p-6 flex flex-col grow">
                 <div className="mb-2">
                   <span className="inline-block bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded-full font-semibold">
-                    {prodotto.categoria}
+                    {p.categoria}
                   </span>
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                  {prodotto.nome}
+                  {p.nome}
                 </h3>
-                <p className="text-gray-600 mb-6">
-                  {prodotto.descrizione}
-                </p>
+                <p className="text-gray-600 mb-6">{p.descrizione}</p>
 
-                {/* Rimuoviamo i prezzi e aggiungiamo link all'ecommerce */}
+                {/* CTA in basso */}
                 <a
-                  href={prodotto.ecommerceUrl || "/ecommerce"}
+                  href={p.ecommerceUrl || "/ecommerce"}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full bg-orange-600 text-white px-4 py-3 rounded-full text-sm font-semibold hover:bg-orange-700 transition-colors text-center block"
+                  className="mt-auto w-full bg-orange-600 text-white px-4 py-3 rounded-full text-sm font-semibold hover:bg-orange-700 transition-colors text-center"
                 >
                   Scopri altro
                 </a>
@@ -301,8 +307,18 @@ function ProdottiSection() {
             className="inline-flex items-center bg-orange-600 text-white px-8 py-4 rounded-full text-lg font-semibold hover:bg-orange-700 transition-colors"
           >
             Vai all'Ecommerce Completo
-            <svg className="ml-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            <svg
+              className="ml-2 h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
             </svg>
           </Link>
         </div>
@@ -310,7 +326,6 @@ function ProdottiSection() {
     </section>
   );
 }
-        
 
 function AssistenzaSection() {
   return (
@@ -321,22 +336,21 @@ function AssistenzaSection() {
             Assistenza
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Supporto completo per tutti i nostri clienti, prima, durante e dopo l'installazione
+            Supporto completo per tutti i nostri clienti, prima, durante e dopo
+            l'installazione.
           </p>
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {ASSISTENZA.map((servizio) => (
-            <div key={servizio.id} className="text-center">
-              <div className="bg-orange-100 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4">
-                <span className="text-3xl">{servizio.icona}</span>
-              </div>
+          {ASSISTENZA.map((s) => (
+            <div
+              key={s.id}
+              className="text-center bg-white rounded-2xl shadow-lg border border-gray-100 p-8"
+            >
               <h3 className="text-xl font-semibold text-gray-900 mb-3">
-                {servizio.titolo}
+                {s.titolo}
               </h3>
-              <p className="text-gray-600">
-                {servizio.descrizione}
-              </p>
+              <p className="text-gray-600">{s.descrizione}</p>
             </div>
           ))}
         </div>
@@ -350,50 +364,86 @@ function Footer() {
     <footer className="bg-gray-900 text-white py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid md:grid-cols-4 gap-8">
-          {/* Logo e descrizione */}
           <div className="md:col-span-2">
             <div className="flex items-center space-x-2 mb-4">
-              <img 
-                src="/images/logo.png" 
-                alt="Meglio Efficientare" 
+              <img
+                src="/images/logo.png"
+                alt="Meglio Efficientare"
                 className="h-10 w-auto"
               />
             </div>
             <p className="text-gray-400 mb-4">
-              Meglio Efficientare è la piattaforma che connette agenti, installatori e clienti 
-              per creare un ecosistema completo di soluzioni energetiche sostenibili.
+              Meglio Efficientare connette agenti, installatori e clienti per
+              soluzioni energetiche sostenibili.
             </p>
           </div>
 
-          {/* Link rapidi */}
           <div>
             <h3 className="text-lg font-semibold mb-4">Link Rapidi</h3>
             <ul className="space-y-2">
-              <li><a href="#chi-siamo" className="text-gray-400 hover:text-white transition-colors">Chi Siamo</a></li>
-              <li><a href="#servizi" className="text-gray-400 hover:text-white transition-colors">Servizi</a></li>
-              <li><a href="#prodotti" className="text-gray-400 hover:text-white transition-colors">Prodotti</a></li>
-              <li><a href="#assistenza" className="text-gray-400 hover:text-white transition-colors">Assistenza</a></li>
+              <li>
+                <a
+                  href="#chi-siamo"
+                  className="text-gray-400 hover:text-white transition-colors"
+                >
+                  Chi Siamo
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#servizi"
+                  className="text-gray-400 hover:text-white transition-colors"
+                >
+                  Servizi
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#prodotti"
+                  className="text-gray-400 hover:text-white transition-colors"
+                >
+                  Prodotti
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#assistenza"
+                  className="text-gray-400 hover:text-white transition-colors"
+                >
+                  Assistenza
+                </a>
+              </li>
             </ul>
           </div>
 
-          {/* Contatti */}
           <div>
             <h3 className="text-lg font-semibold mb-4">Contatti</h3>
             <ul className="space-y-2 text-gray-400">
-              <li>📧 info@energyplanner.it</li>
-              <li>📞 +39 123 456 7890</li>
-              <li>📍 Via Esempio 123, Milano</li>
+              <li>info@energyplanner.it</li>
+              <li>+39 123 456 7890</li>
+              <li>Via Esempio 123, Milano</li>
             </ul>
           </div>
         </div>
 
         <div className="border-t border-gray-800 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
           <p className="text-gray-400">
-            © {new Date().getFullYear()} Meglio Efficientare. Tutti i diritti riservati.
+            © {new Date().getFullYear()} Meglio Efficientare. Tutti i diritti
+            riservati.
           </p>
           <div className="flex space-x-6 mt-4 md:mt-0">
-            <a href="#" className="text-gray-400 hover:text-white transition-colors">Privacy Policy</a>
-            <a href="#" className="text-gray-400 hover:text-white transition-colors">Termini di Servizio</a>
+            <a
+              href="#"
+              className="text-gray-400 hover:text-white transition-colors"
+            >
+              Privacy Policy
+            </a>
+            <a
+              href="#"
+              className="text-gray-400 hover:text-white transition-colors"
+            >
+              Termini di Servizio
+            </a>
           </div>
         </div>
       </div>

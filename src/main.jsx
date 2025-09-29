@@ -8,6 +8,7 @@ import ContoTermico from './pages/ContoTermico.jsx'
 import Ecommerce from './pages/Ecommerce.jsx'
 import Installatori from './pages/Installatori.jsx'
 import Dashboard from './pages/Dashboard.jsx'
+import InstallatoriTuttiPage from './pages/InstallatoriTutti.jsx'
 
 createRoot(document.getElementById('root')).render(
   <React.StrictMode>
@@ -19,6 +20,8 @@ createRoot(document.getElementById('root')).render(
         <Route path="/installatori" element={<Installatori />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/Compilazione" element={<MeglioCompilare />} />
+        <Route path="/installatori-tutti" element={<InstallatoriTuttiPage />} />
+
       </Routes>
     </BrowserRouter>
   </React.StrictMode>,
