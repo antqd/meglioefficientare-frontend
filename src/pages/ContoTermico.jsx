@@ -3,7 +3,7 @@
 // Stack: React + TailwindCSS + GSAP (@gsap/react)
 // Istruzioni: npm i gsap @gsap/react
 
-import React, { useRef, useState, useMemo } from "react";
+import { useRef, useState, useMemo } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
@@ -78,34 +78,14 @@ export default function ContoTermico() {
   );
 }
 
-function Logo({ className = "h-6 w-6" }) {
-  return (
-    <svg viewBox="0 0 32 32" className={className} aria-hidden>
-      <defs>
-        <linearGradient id="epg" x1="0" x2="1" y1="0" y2="1">
-          <stop offset="0%" stopColor="#fb923c" />
-          <stop offset="100%" stopColor="#0f172a" />
-        </linearGradient>
-      </defs>
-      <rect x="2" y="2" width="28" height="28" rx="6" fill="url(#epg)" />
-      <path
-        d="M10 18h6a4 4 0 0 0 0-8h-3"
-        stroke="#fff"
-        strokeWidth="2.2"
-        fill="none"
-        strokeLinecap="round"
-      />
-      <circle cx="22" cy="22" r="3" fill="#fff" />
-    </svg>
-  );
-}
+
 
 function Header() {
   return (
     <header className="sticky top-0 z-40 bg-white/90 backdrop-blur border-b">
       <div className="mx-auto max-w-6xl px-4 h-14 flex items-center gap-3">
-
-        <img src="/images/logo.png" alt="Meglio Efficientare" className="h-14 w-66" />
+        <a href="/"><img src="/images/logo.png" alt="Meglio Efficientare" className="h-14 w-66" /></a>
+        
 
         <nav className="ml-auto hidden md:flex items-center gap-4 text-sm font-medium">
           
