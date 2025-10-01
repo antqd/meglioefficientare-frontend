@@ -1,16 +1,19 @@
-import React from 'react'
-import { createRoot } from 'react-dom/client'
-import './index.css'
-import App from './App.jsx'
-import { BrowserRouter, Routes, Route  } from 'react-router-dom'
-import MeglioCompilare from './pages/MeglioCompilare.jsx'
-import ContoTermico from './pages/ContoTermico.jsx'
-import Ecommerce from './pages/Ecommerce.jsx'
-import Installatori from './pages/Installatori.jsx'
-import Dashboard from './pages/Dashboard.jsx'
-import InstallatoriTuttiPage from './pages/InstallatoriTutti.jsx'
+// src/main.jsx
+import React from "react";
+import { createRoot } from "react-dom/client";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import "./index.css";
 
-createRoot(document.getElementById('root')).render(
+// Pagine
+import App from "./App.jsx";
+import MeglioCompilare from "./pages/MeglioCompilare.jsx";
+import ContoTermico from "./pages/ContoTermico.jsx";
+import Ecommerce from "./pages/Ecommerce.jsx";
+import Installatori from "./pages/Installatori.jsx";
+import Dashboard from "./pages/Dashboard.jsx";
+import InstallatoriTuttiPage from "./pages/InstallatoriTutti.jsx";
+
+createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <BrowserRouter>
       <Routes>
@@ -19,10 +22,15 @@ createRoot(document.getElementById('root')).render(
         <Route path="/ecommerce" element={<Ecommerce />} />
         <Route path="/installatori" element={<Installatori />} />
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/Compilazione" element={<MeglioCompilare />} />
+        <Route path="/compilazione" element={<MeglioCompilare />} />
         <Route path="/installatori-tutti" element={<InstallatoriTuttiPage />} />
 
+        {/* 404 fallback */}
+        <Route
+          path="*"
+          element={<div style={{ padding: 24 }}>Pagina non trovata</div>}
+        />
       </Routes>
     </BrowserRouter>
-  </React.StrictMode>,
-)
+  </React.StrictMode>
+);
