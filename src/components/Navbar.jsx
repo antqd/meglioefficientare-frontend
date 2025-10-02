@@ -89,7 +89,7 @@ export default function Navbar({ cartCount = 0 }) {
             </Link>
 
             <Link
-              to="/ecommerce#carrello"
+              to="/carrello"
               className="relative p-2 rounded-full border border-gray-200 hover:border-orange-300 hover:bg-orange-50 transition"
               title="Carrello"
             >
@@ -161,7 +161,7 @@ export default function Navbar({ cartCount = 0 }) {
               </Link>
 
               <Link
-                to="/ecommerce#carrello"
+                to="/carrello"
                 className="flex items-center gap-2 px-3 py-2 rounded-md border border-gray-200 hover:border-orange-300 hover:bg-orange-50 transition"
                 onClick={() => setOpen(false)}
               >

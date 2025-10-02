@@ -12,6 +12,10 @@ import Ecommerce from "./pages/Ecommerce.jsx";
 import Installatori from "./pages/Installatori.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import InstallatoriTuttiPage from "./pages/InstallatoriTutti.jsx";
+import InstallatoreDettaglioPage from "./pages/InstallatoreDettaglio.jsx";
+import CarrelloPage from "./pages/Carrello.jsx";
+import AccountPage from "./pages/Account.jsx";
+import ProfiloPage from "./pages/Profilo.jsx";
 
 createRoot(document.getElementById("root")).render(
   <React.StrictMode>
@@ -21,9 +25,16 @@ createRoot(document.getElementById("root")).render(
         <Route path="/conto-termico" element={<ContoTermico />} />
         <Route path="/ecommerce" element={<Ecommerce />} />
         <Route path="/installatori" element={<Installatori />} />
+        <Route
+          path="/installatori/:id"
+          element={<InstallatoreDettaglioPage />}
+        />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/compilazione" element={<MeglioCompilare />} />
         <Route path="/installatori-tutti" element={<InstallatoriTuttiPage />} />
+        <Route path="/carrello" element={<CarrelloPage />} />
+        <Route path="/account" element={<AccountPage />} />
+        <Route path="/profilo" element={<ProfiloPage />} />
 
         {/* 404 fallback */}
         <Route

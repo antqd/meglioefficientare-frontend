@@ -2,49 +2,30 @@
 import React, { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
-const PROVINCE = [
-  "Milano (MI)",
-  "Roma (RM)",
-  "Torino (TO)",
-  "Bologna (BO)",
-  "Firenze (FI)",
-  "Genova (GE)",
-  "Venezia (VE)",
-  "Verona (VR)",
-  "Bari (BA)",
-  "Napoli (NA)",
-];
+import { CATEGORIE, INSTALLATORI, PROVINCE } from "../data/installatori";
+import { slugify } from "../utils/string";
 
-const CATEGORIE = [
+const VIDEO_GUIDE = [
   {
-    id: "elettrico",
-    titolo: "Elettrico",
-    descr: "Quadri, linee, colonnine EV, domotica",
-    img: "/images/categorie/elettrico.jpg",
+    id: "introduzione",
+    title: "Cosa include il nostro pacchetto fotovoltaico",
+    url: "https://www.youtube.com/embed/2TrZ0xKjGZU",
+    duration: "3:45",
+    descr: "Panoramica sull'impianto, componenti principali e servizi inclusi nella fornitura Meglio Efficientare.",
   },
   {
-    id: "idraulico",
-    titolo: "Idraulico",
-    descr: "Impianti idrico-sanitari, perdite, sostituzioni",
-    img: "/images/categorie/idraulico.jpg",
+    id: "montaggio",
+    title: "Come avviene il montaggio sul tetto",
+    url: "https://www.youtube.com/embed/rW2iJRJ5jqs",
+    duration: "4:20",
+    descr: "Dal sopralluogo alla posa dei pannelli, segui passo passo il lavoro della squadra installatrice.",
   },
   {
-    id: "clima",
-    titolo: "Clima / PDC",
-    descr: "Climatizzazione, pompe di calore, split",
-    img: "/images/categorie/clima.jpg",
-  },
-  {
-    id: "accumulo",
-    titolo: "Accumulo",
-    descr: "Sistemi di accumulo, batterie, gestione energia",
-    img: "/images/accumulo.png",
-  },
-  {
-    id: "fotovoltaico",
-    titolo: "Fotovoltaico",
-    descr: "Progettazione, installazione, storage",
-    img: "/images/pannelli.png",
+    id: "monitoraggio",
+    title: "Monitoraggio e assistenza post installazione",
+    url: "https://www.youtube.com/embed/biU7ol6g8Nc",
+    duration: "2:58",
+    descr: "Scopri come controllare produzione e consumi e quali servizi di assistenza ricevi dopo l'attivazione.",
   },
 ];
 
@@ -65,37 +46,6 @@ const FAQLIST = [
     q: "Coprite tutto il territorio nazionale?",
     a: "Siamo operativi in molte province e la rete è in espansione. Inserisci CAP o seleziona la provincia per verificare la copertura attuale.",
   },
-];
-
-// SOLO i 3 installatori principali
-const INSTALLATORI = [
-  {
-    id: 1,
-    nome: "Mario Rossi Impianti",
-    provincia: "Milano (MI)",
-    rating: 4.8,
-    categorie: ["Elettrico", "Fotovoltaico"],
-    tempi: "48h",
-    img: "/images/installatori/1.jpg",
-  },
-  {
-    id: 2,
-    nome: "Luca Bianchi Termoidraulica",
-    provincia: "Bologna (BO)",
-    rating: 4.6,
-    categorie: ["Idraulico", "Caldaie"],
-    tempi: "24h",
-    img: "/images/installatori/2.jpg",
-  },
-  {
-    id: 3,
-    nome: "Giulia Verdi Clima",
-    provincia: "Roma (RM)",
-    rating: 4.7,
-    categorie: ["Clima / PDC"],
-    tempi: "72h",
-    img: "/images/installatori/3.jpg",
-  },  
 ];
 
 export default function InstallatoriPage() {
@@ -316,6 +266,62 @@ export default function InstallatoriPage() {
         </div>
       </section>
 
+      {/* VIDEO GUIDA FOTOVOLTAICO */}
+      <section className="py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-wide text-orange-500">
+                Video guida
+              </p>
+              <h2 className="mt-2 text-2xl md:text-3xl font-bold text-gray-900">
+                Hai acquistato un fotovoltaico o vuoi acquistarlo?
+              </h2>
+              <p className="mt-3 text-gray-600 max-w-2xl">
+                Guarda i video illustrativi per scoprire cosa troverai, come verrà
+                installato l'impianto e quali servizi ricevi prima e dopo il
+                montaggio.
+              </p>
+            </div>
+            <a
+              href="/ecommerce"
+              className="inline-flex items-center rounded-full border-2 border-orange-600 px-6 py-3 font-semibold text-orange-600 hover:bg-orange-50"
+            >
+              Scopri le offerte fotovoltaiche
+            </a>
+          </div>
+
+          <div className="mt-10 grid gap-8 lg:grid-cols-3">
+            {VIDEO_GUIDE.map((video) => (
+              <article
+                key={video.id}
+                className="rounded-3xl border border-gray-200 bg-white shadow-sm overflow-hidden"
+              >
+                <div className="aspect-video bg-gray-100">
+                  <iframe
+                    title={video.title}
+                    src={video.url}
+                    className="h-full w-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                  />
+                </div>
+                <div className="p-5 space-y-2">
+                  <div className="flex items-center justify-between text-sm text-gray-500">
+                    <span>{video.duration}</span>
+                    <span>Video demo</span>
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    {video.title}
+                  </h3>
+                  <p className="text-sm text-gray-600">{video.descr}</p>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* COME FUNZIONA */}
       <section className="py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -485,10 +491,10 @@ function CardInstallatore({ nome, provincia, rating, categorie, tempi, img }) {
         <div className="mt-4 flex items-center justify-between">
           <span className="text-sm text-gray-500">Disponibilità: {tempi}</span>
           <Link
-            to="/ecommerce"
+            to={`/installatori/${slugify(nome)}`}
             className="text-sm font-semibold text-orange-600 hover:text-orange-700 inline-flex items-center"
           >
-            Richiedi preventivo
+            Scheda completa
             <svg
               className="ml-1 h-4 w-4"
               viewBox="0 0 24 24"

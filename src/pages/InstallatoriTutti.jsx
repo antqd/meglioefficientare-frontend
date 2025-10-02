@@ -2,7 +2,8 @@
 import React, { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
-import { PROVINCE, INSTALLATORI } from "../data/installatori.js";
+import { PROVINCE, INSTALLATORI } from "../data/installatori";
+import { slugify } from "../utils/string";
 
 export default function InstallatoriTuttiPage() {
   const [cap, setCap] = useState("");
@@ -43,7 +44,7 @@ export default function InstallatoriTuttiPage() {
               to="/installatori"
               className="inline-flex items-center rounded-full border-2 border-gray-300 text-gray-700 px-5 py-2.5 font-semibold hover:bg-gray-100 self-start"
             >
-              ← Torna alla pagina rete
+              {"<- Torna alla pagina rete"}
             </Link>
           </div>
 
@@ -131,8 +132,8 @@ function CardInstallatore({ nome, provincia, rating, categorie, tempi, img }) {
         </div>
         <div className="mt-4 flex items-center justify-between">
           <span className="text-sm text-gray-500">Disponibilità: {tempi}</span>
-          <Link to="/ecommerce" className="text-sm font-semibold text-orange-600 hover:text-orange-700 inline-flex items-center">
-            Richiedi preventivo
+          <Link to={`/installatori/${slugify(nome)}`} className="text-sm font-semibold text-orange-600 hover:text-orange-700 inline-flex items-center">
+            Scheda completa
             <svg className="ml-1 h-4 w-4" viewBox="0 0 24 24" stroke="currentColor" fill="none">
               <path d="M9 5l7 7-7 7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
