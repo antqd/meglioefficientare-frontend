@@ -11,6 +11,9 @@ import { Link } from "react-router-dom";
 
 gsap.registerPlugin(ScrollTrigger);
 
+// === Backend base URL: prendi da VITE_BACKEND_URL o fallback locale ===
+const BASE = import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:4010";
+
 const euro = (v) =>
   new Intl.NumberFormat("it-IT", { style: "currency", currency: "EUR" }).format(
     Number(v) || 0
@@ -79,13 +82,17 @@ export default function ContoTermico() {
   );
 }
 
-
-
 function Header() {
   return (
     <header className="sticky top-0 z-40 bg-white/90 backdrop-blur border-b shadow-sm">
       <div className="mx-auto max-w-6xl px-4 h-14 flex items-center gap-3">
-        <a href="/"><img src="/images/logo.png" alt="Meglio Efficientare" className="h-14 w-66" /></a>
+        <a href="/">
+          <img
+            src="/images/logo.png"
+            alt="Meglio Efficientare"
+            className="h-14 w-66"
+          />
+        </a>
 
         <nav className="ml-auto hidden md:flex items-center gap-4 text-sm font-medium text-slate-700">
           <a href="#novita" className="hover:text-orange-600">
@@ -159,7 +166,8 @@ function GuideDownload() {
               Scarica la guida completa al Conto Termico
             </h2>
             <p className="mt-3 text-base text-slate-700 leading-relaxed">
-              Una panoramica operativa con requisiti, documentazione e tempistiche per ottenere gli incentivi GSE.
+              Una panoramica operativa con requisiti, documentazione e
+              tempistiche per ottenere gli incentivi GSE.
             </p>
           </div>
           <a
@@ -992,11 +1000,13 @@ function LeadForm({ onBack, payload }) {
   const { answers = {}, trace = [], ...rawSelections } = payload || {};
   const labelMap = useMemo(() => {
     const map = {};
-    trace.forEach((item) => {
-      map[item.field] = item.label ?? item.value;
-    });
+    for (let i = 0; i < trace.length; i++) {
+      const item = trace[i];
+      if (item && item.field) map[item.field] = item.label ?? item.value;
+    }
     return map;
   }, [trace]);
+
   const summaryRows = useMemo(() => {
     const labels = {
       prodotto: "Prodotto scelto",
@@ -1006,21 +1016,24 @@ function LeadForm({ onBack, payload }) {
       decisione: "Fase decisionale",
       quando: "Tempistica prevista",
     };
-    return Object.entries(labels)
-      .map(([field, label]) => {
-        const answerValue = answers?.[field];
-        if (answerValue === null || typeof answerValue === "undefined") {
-          return null;
-        }
-        const displayValue = labelMap[field] ??
-          (typeof answerValue === "boolean"
-            ? answerValue
-              ? "Sì"
-              : "No"
-            : answerValue);
-        return { field, label, value: displayValue };
-      })
-      .filter(Boolean);
+    const out = [];
+    for (const field in labels) {
+      const answerValue =
+        answers && Object.prototype.hasOwnProperty.call(answers, field)
+          ? answers[field]
+          : undefined;
+      if (answerValue === null || typeof answerValue === "undefined") continue;
+      const displayValue =
+        labelMap[field] != null
+          ? labelMap[field]
+          : typeof answerValue === "boolean"
+          ? answerValue
+            ? "Sì"
+            : "No"
+          : answerValue;
+      out.push({ field, label: labels[field], value: displayValue });
+    }
+    return out;
   }, [answers, labelMap]);
 
   const [form, setForm] = useState({
@@ -1029,10 +1042,17 @@ function LeadForm({ onBack, payload }) {
     cognome: "",
     email: "",
   });
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState("");
+
   const onChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
   const canSend = form.luogo && form.nome && form.cognome && form.email;
-  const submit = (e) => {
+
+  const submit = async (e) => {
     e.preventDefault();
+    setError("");
+    setSending(true);
+
     const leadPayload = {
       contatto: form,
       selections: {
@@ -1041,9 +1061,31 @@ function LeadForm({ onBack, payload }) {
       },
       trace,
     };
-    // Per ora mostriamo un riepilogo. L'integrazione backend/mail verrà aggiunta successivamente.
-    console.log("Richiesta inviata", leadPayload);
-    alert("Richiesta inviata! Ti contatteremo a breve.");
+
+    try {
+      const res = await fetch(`${BASE}/api/preventivo-gratuito`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(leadPayload),
+      });
+      const data = await res
+        .json()
+        .catch(() => ({ ok: res.ok, message: res.statusText }));
+
+      if (!res.ok) {
+        throw new Error(
+          (data && (data.message || data.error)) || "Errore invio"
+        );
+      }
+
+      // Successo
+      alert("Richiesta inviata! Ti abbiamo mandato una copia via email.");
+      setForm({ luogo: "", nome: "", cognome: "", email: "" });
+    } catch (err) {
+      setError(String((err && err.message) || err || "Errore imprevisto"));
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -1058,7 +1100,10 @@ function LeadForm({ onBack, payload }) {
           <p className="font-semibold text-orange-700">Le tue scelte</p>
           <ul className="mt-2 space-y-1">
             {summaryRows.map(({ field, label, value }) => (
-              <li key={field} className="flex items-center justify-between gap-4">
+              <li
+                key={field}
+                className="flex items-center justify-between gap-4"
+              >
                 <span className="text-slate-500">{label}</span>
                 <span className="font-semibold text-slate-900">{value}</span>
               </li>
@@ -1107,20 +1152,29 @@ function LeadForm({ onBack, payload }) {
             className="mt-1 w-full rounded-2xl border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
           />
         </div>
+
+        {/* Messaggio errore */}
+        {error && (
+          <div className="sm:col-span-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {error}
+          </div>
+        )}
+
         <div className="sm:col-span-2 flex items-center gap-3">
           <button
             type="button"
             onClick={onBack}
             className="text-slate-700 hover:text-orange-700 text-sm"
+            disabled={sending}
           >
             ← Indietro
           </button>
           <button
             type="submit"
-            disabled={!canSend}
+            disabled={!canSend || sending}
             className="ml-auto rounded-full bg-orange-600 text-white px-5 py-2 font-semibold disabled:opacity-50"
           >
-            Invia richiesta
+            {sending ? "Invio in corso..." : "Invia richiesta"}
           </button>
         </div>
       </form>
