@@ -364,6 +364,14 @@ function CalcolatoreSection() {
   return (
     <section id="calcolatore" className="reveal py-10 md:py-14">
       <div className="mx-auto max-w-6xl px-4 grid gap-6 items-start">
+        <div className="text-center space-y-2">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-orange-500">
+            Preventivo Conto Termico
+          </p>
+          <h2 className="text-2xl md:text-3xl font-bold text-slate-900">
+            Calcola il tuo incentivo e ricevi il tuo preventivo gratuito
+          </h2>
+        </div>
         <ProductChoiceBelow />
       </div>
     </section>
@@ -545,6 +553,34 @@ function ProductChoiceBelow() {
   const [riscaldamento, setRiscaldamento] = useState(null);
   const [statoDecisione, setStatoDecisione] = useState(null);
   const [quando, setQuando] = useState(null);
+  const [answers, setAnswers] = useState({
+    prodotto: null,
+    edificio: null,
+    spazio: null,
+    riscaldamento: null,
+    decisione: null,
+    quando: null,
+  });
+  const [selectionTrace, setSelectionTrace] = useState([]);
+
+  const trackSelection = (field, value, meta = {}) => {
+    setAnswers((prev) => ({ ...prev, [field]: value }));
+    setSelectionTrace((prev) => {
+      const entry = {
+        field,
+        value,
+        ...meta,
+        timestamp: new Date().toISOString(),
+      };
+      const index = prev.findIndex((item) => item.field === field);
+      if (index >= 0) {
+        const next = [...prev];
+        next[index] = entry;
+        return next;
+      }
+      return [...prev, entry];
+    });
+  };
 
   const HEATING = [
     { id: "gas", label: "Caldaia a Gas/Metano" },
@@ -602,6 +638,10 @@ function ProductChoiceBelow() {
               selected={selected === p.id}
               onSelect={() => {
                 setSelected(p.id);
+                trackSelection("prodotto", p.id, {
+                  label: p.nome,
+                  step: "prodotto",
+                });
                 setStep(1);
               }}
             />
@@ -629,6 +669,10 @@ function ProductChoiceBelow() {
               selected={edificio === e.id}
               onClick={() => {
                 setEdificio(e.id);
+                trackSelection("edificio", e.id, {
+                  label: e.label,
+                  step: "edificio",
+                });
                 setStep(step + 1);
               }}
             />
@@ -664,6 +708,10 @@ function ProductChoiceBelow() {
             selected={spazio === true}
             onClick={() => {
               setSpazio(true);
+              trackSelection("spazio", true, {
+                label: "Sì",
+                step: "spazio",
+              });
               setStep(step + 1);
             }}
           />
@@ -673,6 +721,10 @@ function ProductChoiceBelow() {
             selected={spazio === false}
             onClick={() => {
               setSpazio(false);
+              trackSelection("spazio", false, {
+                label: "No",
+                step: "spazio",
+              });
               setStep(step + 1);
             }}
           />
@@ -707,6 +759,10 @@ function ProductChoiceBelow() {
               selected={riscaldamento === h.id}
               onClick={() => {
                 setRiscaldamento(h.id);
+                trackSelection("riscaldamento", h.id, {
+                  label: h.label,
+                  step: "riscaldamento",
+                });
                 setStep(step + 1);
               }}
             />
@@ -740,6 +796,10 @@ function ProductChoiceBelow() {
               selected={statoDecisione === d.id}
               onClick={() => {
                 setStatoDecisione(d.id);
+                trackSelection("decisione", d.id, {
+                  label: d.label,
+                  step: "decisione",
+                });
                 setStep(step + 1);
               }}
             />
@@ -773,6 +833,10 @@ function ProductChoiceBelow() {
               selected={quando === q.id}
               onClick={() => {
                 setQuando(q.id);
+                trackSelection("quando", q.id, {
+                  label: q.label,
+                  step: "quando",
+                });
                 setStep(step + 1);
               }}
             />
@@ -801,6 +865,8 @@ function ProductChoiceBelow() {
         riscaldamento,
         statoDecisione,
         quando,
+        answers,
+        trace: selectionTrace,
       }}
     />
   );
@@ -923,6 +989,40 @@ function OptionCard({ label, icon, selected, onClick }) {
 }
 
 function LeadForm({ onBack, payload }) {
+  const { answers = {}, trace = [], ...rawSelections } = payload || {};
+  const labelMap = useMemo(() => {
+    const map = {};
+    trace.forEach((item) => {
+      map[item.field] = item.label ?? item.value;
+    });
+    return map;
+  }, [trace]);
+  const summaryRows = useMemo(() => {
+    const labels = {
+      prodotto: "Prodotto scelto",
+      edificio: "Tipologia edificio",
+      spazio: "Spazio esterno",
+      riscaldamento: "Impianto attuale",
+      decisione: "Fase decisionale",
+      quando: "Tempistica prevista",
+    };
+    return Object.entries(labels)
+      .map(([field, label]) => {
+        const answerValue = answers?.[field];
+        if (answerValue === null || typeof answerValue === "undefined") {
+          return null;
+        }
+        const displayValue = labelMap[field] ??
+          (typeof answerValue === "boolean"
+            ? answerValue
+              ? "Sì"
+              : "No"
+            : answerValue);
+        return { field, label, value: displayValue };
+      })
+      .filter(Boolean);
+  }, [answers, labelMap]);
+
   const [form, setForm] = useState({
     luogo: "",
     nome: "",
@@ -933,8 +1033,16 @@ function LeadForm({ onBack, payload }) {
   const canSend = form.luogo && form.nome && form.cognome && form.email;
   const submit = (e) => {
     e.preventDefault();
-    // Per ora mostriamo un riepilogo. Integrazione backend/mail può essere aggiunta.
-    console.log("Richiesta inviata", { ...payload, ...form });
+    const leadPayload = {
+      contatto: form,
+      selections: {
+        ...answers,
+        ...rawSelections,
+      },
+      trace,
+    };
+    // Per ora mostriamo un riepilogo. L'integrazione backend/mail verrà aggiunta successivamente.
+    console.log("Richiesta inviata", leadPayload);
     alert("Richiesta inviata! Ti contatteremo a breve.");
   };
 
@@ -944,6 +1052,20 @@ function LeadForm({ onBack, payload }) {
       <h3 className="mt-1 text-2xl font-bold">
         Inserisci i tuoi dati per la richiesta
       </h3>
+
+      {summaryRows.length > 0 && (
+        <div className="mt-4 rounded-2xl border border-orange-100 bg-orange-50/70 p-4 text-sm text-slate-700">
+          <p className="font-semibold text-orange-700">Le tue scelte</p>
+          <ul className="mt-2 space-y-1">
+            {summaryRows.map(({ field, label, value }) => (
+              <li key={field} className="flex items-center justify-between gap-4">
+                <span className="text-slate-500">{label}</span>
+                <span className="font-semibold text-slate-900">{value}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <form onSubmit={submit} className="mt-4 grid gap-4 sm:grid-cols-2">
         <div className="sm:col-span-2">
