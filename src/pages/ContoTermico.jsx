@@ -7,12 +7,12 @@ import { useRef, useState, useMemo } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 gsap.registerPlugin(ScrollTrigger);
 
 // === Backend base URL: prendi da VITE_BACKEND_URL o fallback locale ===
-const BASE = import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:4010";
+const BASE = import.meta.env.VITE_BACKEND_URL || "https://bc.davveroo.it/api";
 
 const euro = (v) =>
   new Intl.NumberFormat("it-IT", { style: "currency", currency: "EUR" }).format(
@@ -997,6 +997,7 @@ function OptionCard({ label, icon, selected, onClick }) {
 }
 
 function LeadForm({ onBack, payload }) {
+  const navigate = useNavigate();
   const { answers = {}, trace = [], ...rawSelections } = payload || {};
   const labelMap = useMemo(() => {
     const map = {};
@@ -1063,7 +1064,8 @@ function LeadForm({ onBack, payload }) {
     };
 
     try {
-      const res = await fetch(`${BASE}/api/preventivo-gratuito`, {
+      const contactSnapshot = { ...form };
+      const res = await fetch(`${BASE}/preventivo-gratuito`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(leadPayload),
@@ -1078,9 +1080,18 @@ function LeadForm({ onBack, payload }) {
         );
       }
 
-      // Successo
-      alert("Richiesta inviata! Ti abbiamo mandato una copia via email.");
+      // Successo: reset e redirect con messaggio personalizzato
       setForm({ luogo: "", nome: "", cognome: "", email: "" });
+      navigate("/thank-you", {
+        state: {
+          message:
+            "Grazie! La tua richiesta è stata inviata. Ti ricontatteremo a breve con il preventivo dedicato.",
+          lead: {
+            contatto: contactSnapshot,
+            selections: leadPayload.selections,
+          },
+        },
+      });
     } catch (err) {
       setError(String((err && err.message) || err || "Errore imprevisto"));
     } finally {
