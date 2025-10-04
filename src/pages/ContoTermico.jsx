@@ -66,6 +66,7 @@ export default function ContoTermico() {
     <div ref={root} className="min-h-screen bg-white text-slate-900">
       <Header />
       <Hero />
+      <GuideDownload />
       <Highlights />
       <Interventi />
       <HowTo />
@@ -82,13 +83,11 @@ export default function ContoTermico() {
 
 function Header() {
   return (
-    <header className="sticky top-0 z-40 bg-white/90 backdrop-blur border-b">
+    <header className="sticky top-0 z-40 bg-white/90 backdrop-blur border-b shadow-sm">
       <div className="mx-auto max-w-6xl px-4 h-14 flex items-center gap-3">
         <a href="/"><img src="/images/logo.png" alt="Meglio Efficientare" className="h-14 w-66" /></a>
-        
 
-        <nav className="ml-auto hidden md:flex items-center gap-4 text-sm font-medium">
-          
+        <nav className="ml-auto hidden md:flex items-center gap-4 text-sm font-medium text-slate-700">
           <a href="#novita" className="hover:text-orange-600">
             Novità
           </a>
@@ -99,15 +98,11 @@ function Header() {
             Come richiederlo
           </a>
           <Link
-            to="/Compilazione"
-            className="rounded-full bg-orange-600 text-white px-4 py-2 hover:bg-orange-700"
+            to="/compilazione"
+            className="rounded-full bg-orange-600 text-white px-4 py-2 shadow-sm hover:bg-orange-700"
           >
             Attiva Ora!
           </Link>
-          <a href="/"             className="rounded-full bg-orange-600 text-white px-4 py-2 hover:bg-orange-700"
->
-            Torna alla home
-          </a>
         </nav>
       </div>
     </header>
@@ -145,6 +140,36 @@ function Hero() {
           <div className="rounded-3xl border bg-white p-4 sm:p-6 shadow-sm">
             <SimpleCalculator />
           </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function GuideDownload() {
+  return (
+    <section className="bg-white">
+      <div className="mx-auto max-w-6xl px-4 py-10 md:py-12">
+        <div className="rounded-3xl border border-orange-100 bg-gradient-to-r from-orange-50 via-white to-white p-6 md:p-10 flex flex-col md:flex-row items-start md:items-center gap-6 shadow-sm">
+          <div className="flex-1">
+            <p className="text-sm uppercase tracking-widest text-orange-500 font-semibold">
+              Risorsa gratuita
+            </p>
+            <h2 className="mt-2 text-2xl md:text-3xl font-bold text-slate-900">
+              Scarica la guida completa al Conto Termico
+            </h2>
+            <p className="mt-3 text-base text-slate-700 leading-relaxed">
+              Una panoramica operativa con requisiti, documentazione e tempistiche per ottenere gli incentivi GSE.
+            </p>
+          </div>
+          <a
+            href="/modelloconto.pdf"
+            download
+            className="inline-flex items-center gap-2 rounded-full bg-orange-600 px-5 py-3 text-white font-semibold shadow hover:bg-orange-700"
+          >
+            Scarica il PDF
+            <span aria-hidden="true">⬇️</span>
+          </a>
         </div>
       </div>
     </section>

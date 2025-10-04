@@ -16,12 +16,16 @@ import InstallatoreDettaglioPage from "./pages/InstallatoreDettaglio.jsx";
 import CarrelloPage from "./pages/Carrello.jsx";
 import AccountPage from "./pages/Account.jsx";
 import ProfiloPage from "./pages/Profilo.jsx";
+import ThankYouPage from "./pages/ThankYou.jsx";
+import MetaPixel from "./components/MetaPixel.jsx";
 
 createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <BrowserRouter>
+      <MetaPixel />
       <Routes>
-        <Route path="/" element={<App />} />
+        <Route path="/" element={<ContoTermico />} />
+        <Route path="/home" element={<App />} />
         <Route path="/conto-termico" element={<ContoTermico />} />
         <Route path="/ecommerce" element={<Ecommerce />} />
         <Route path="/installatori" element={<Installatori />} />
@@ -35,6 +39,7 @@ createRoot(document.getElementById("root")).render(
         <Route path="/carrello" element={<CarrelloPage />} />
         <Route path="/account" element={<AccountPage />} />
         <Route path="/profilo" element={<ProfiloPage />} />
+        <Route path="/thank-you" element={<ThankYouPage />} />
 
         {/* 404 fallback */}
         <Route

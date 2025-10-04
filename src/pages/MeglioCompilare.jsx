@@ -327,7 +327,12 @@ export default function CompilerContoTermico() {
       const txt = await res.text();
       if (!res.ok) throw new Error(`HTTP ${res.status} - ${txt || "no body"}`);
 
-      alert("Inviato al backoffice!");
+      nav("/thank-you", {
+        state: {
+          message:
+            "Abbiamo ricevuto la documentazione. Ti contatteremo appena il dossier sarà preso in carico.",
+        },
+      });
     } catch (e) {
       console.error(e);
       alert("Errore invio: " + e.message);
