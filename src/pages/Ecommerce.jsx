@@ -65,7 +65,7 @@ const PRODOTTI_ECOMMERCE = [
     prezzo: 7500,
     prezzoOriginale: 9000,
     categoria: "Accumulo",
-    immagine: "/images/batteria.png",
+    immagine: "/images/baccumulo.png",
     caratteristiche: [
       "Capacità 10kWh",
       "Cicli di vita 6000+",
