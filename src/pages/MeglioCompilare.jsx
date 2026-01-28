@@ -167,7 +167,7 @@ export default function CompilerContoTermico() {
     const bytes = await fetch("/modelloconto.pdf").then((r) => r.arrayBuffer());
     const pdfDoc = await PDFDocument.load(bytes);
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-    const [page1, page2] = pdfDoc.getPages();
+    const [page4, page5] = pdfDoc.getPages();
 
     const draw = (page, text, { x, y, size = 12 }) =>
       page.drawText(String(text || ""), {
@@ -179,24 +179,24 @@ export default function CompilerContoTermico() {
       });
 
     // p1 Privato
-    draw(page1, form.p_nome, POS.p_nome);
-    draw(page1, form.p_cognome, POS.p_cognome);
-    draw(page1, form.p_iban, POS.p_iban);
-    draw(page1, form.p_cap, POS.p_cap);
-    draw(page1, form.p_indirizzo, POS.p_indirizzo);
-    draw(page1, form.p_comune, POS.p_comune);
-    draw(page1, form.p_telefono, POS.p_telefono);
-    draw(page1, form.p_mail, POS.p_mail);
+    draw(page4, form.p_nome, POS.p_nome);
+    draw(page4, form.p_cognome, POS.p_cognome);
+    draw(page4, form.p_iban, POS.p_iban);
+    draw(page4, form.p_cap, POS.p_cap);
+    draw(page4, form.p_indirizzo, POS.p_indirizzo);
+    draw(page4, form.p_comune, POS.p_comune);
+    draw(page4, form.p_telefono, POS.p_telefono);
+    draw(page4, form.p_mail, POS.p_mail);
     // p1 Azienda
-    draw(page1, form.a_denominazione, POS.a_denominazione);
-    draw(page1, form.a_iban, POS.a_iban);
-    draw(page1, form.a_cap, POS.a_cap);
-    draw(page1, form.a_indirizzo, POS.a_indirizzo);
-    draw(page1, form.a_comune, POS.a_comune);
-    draw(page1, form.a_telefono, POS.a_telefono);
-    draw(page1, form.a_mail, POS.a_mail);
+    draw(page4, form.a_denominazione, POS.a_denominazione);
+    draw(page4, form.a_iban, POS.a_iban);
+    draw(page4, form.a_cap, POS.a_cap);
+    draw(page4, form.a_indirizzo, POS.a_indirizzo);
+    draw(page4, form.a_comune, POS.a_comune);
+    draw(page4, form.a_telefono, POS.a_telefono);
+    draw(page4, form.a_mail, POS.a_mail);
     // p2
-    draw(page2, form.luogoedata, POS.luogoedata);
+    draw(page5, form.luogoedata, POS.luogoedata);
 
     // Firme su p2
     const s1 = getSigDataUrl(sigBenefRef);
