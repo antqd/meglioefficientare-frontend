@@ -1,5 +1,5 @@
 // CompilerContoTermico.jsx
-import React, { useRef, useState } from "react";
+import React, { useMemo, useRef, useState, useEffect } from "react";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { saveAs } from "file-saver";
 import SignatureCanvas from "react-signature-canvas";
@@ -7,26 +7,32 @@ import { useNavigate } from "react-router-dom";
 
 const API_INVIO = "https://bc.davveroo.it/api/ct3-invio";
 
+// ✅ Metti true quando vuoi vedere sul PDF i marker delle coordinate (pallino + nome campo)
+const DEBUG_COORDS = false;
+
 // ====== Coordinate di stampa (NON MODIFICATE) ======
 const POS = {
-  // Pagina 1 - PRIVATO
-  p_nome: { x: 110, y: 690, size: 12 },
-  p_cognome: { x: 300, y: 690, size: 12 },
-  p_iban: { x: 100, y: 665, size: 12 },
-  p_cap: { x: 340, y: 665, size: 12 },
-  p_indirizzo: { x: 115, y: 645, size: 10 },
-  p_comune: { x: 340, y: 645, size: 12 },
+  // Pagina 4 (nel PDF) - PRIVATO
+  p_nome: { x: 145, y: 680, size: 12 },
+  p_iban: { x: 340, y: 640, size: 12 },
+  p_zona: { x: 390, y: 618, size: 12 },
+  p_indirizzo: { x: 110, y: 660, size: 12 },
+  p_comune: { x: 110, y: 640, size: 12 },
   p_telefono: { x: 115, y: 623, size: 12 },
-  p_mail: { x: 300, y: 623, size: 12 },
-  // Pagina 1 - AZIENDA
-  a_denominazione: { x: 240, y: 565, size: 12 },
-  a_iban: { x: 100, y: 543, size: 12 },
-  a_cap: { x: 340, y: 541, size: 12 },
-  a_indirizzo: { x: 120, y: 520, size: 10 },
-  a_comune: { x: 340, y: 520, size: 10 },
-  a_telefono: { x: 120, y: 499, size: 12 },
-  a_mail: { x: 300, y: 499, size: 12 },
-  // Pagina 2
+  p_mail: { x: 90, y: 595, size: 12 }, // ✅ FIX: mancava
+  p_categoria: { x: 420, y: 595, size: 12 },
+
+  // Pagina 4 (nel PDF) - AZIENDA
+  a_denominazione: { x: 145, y: 525, size: 12 },
+  a_iban: { x: 340, y: 478, size: 12 },
+  a_zona: { x: 390, y: 460, size: 12 },
+  a_indirizzo: { x: 110, y: 502, size: 12 },
+  a_comune: { x: 120, y: 478, size: 12 },
+  a_telefono: { x: 120, y: 460, size: 12 },
+  a_mail: { x: 90, y: 440, size: 12 },
+  a_categoria: { x: 415, y: 439, size: 12 },
+
+  // Pagina 5 (nel PDF)
   luogoedata: { x: 116, y: 195, size: 12 },
   firma_benef: { x: 120, y: 145, w: 180, h: 60 },
   firma_resp: { x: 420, y: 145, w: 180, h: 60 },
@@ -38,30 +44,35 @@ export default function CompilerContoTermico() {
   const [form, setForm] = useState({
     // PRIVATO
     p_nome: "",
-    p_cognome: "",
     p_iban: "",
     p_indirizzo: "",
     p_comune: "",
-    p_cap: "",
+    p_zona: "",
     p_telefono: "",
     p_mail: "",
+    p_categoria: "",
+
     // AZIENDA
     a_denominazione: "",
     a_iban: "",
     a_indirizzo: "",
     a_comune: "",
-    a_cap: "",
+    a_zona: "",
     a_telefono: "",
     a_mail: "",
-    // Pagina 2
+    a_categoria: "",
+
+    // Pagina 5
     luogoedata: "",
+
     // Relazione tecnica commerciale (verrà allegata come .txt dal backend)
     relazioneTesto: "",
   });
 
   // ---- Stato allegati in stile Dojo (con preview) ----
-  const [files, setFiles] = useState([]); // tutti i file caricati (per riepilogo)
-  const [filePreviews, setFilePreviews] = useState([]); // preview per sezione
+  const [files, setFiles] = useState([]); // tutti i file caricati (riepilogo)
+  const [filePreviews, setFilePreviews] = useState([]); // preview con id
+
   // Per la POST strutturata a gruppi:
   const [allegati, setAllegati] = useState({
     codice_fiscale: [],
@@ -79,67 +90,15 @@ export default function CompilerContoTermico() {
   const sigBenefRef = useRef(null);
   const sigRespRef = useRef(null);
 
+  useEffect(() => {
+    return () => {
+      if (pdfUrl) URL.revokeObjectURL(pdfUrl);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const onChange = (e) =>
     setForm((s) => ({ ...s, [e.target.name]: e.target.value }));
-
-  // --- Helpers upload stile Dojo ---
-  const handleFileChange = (event, sectionKey) => {
-    const selectedFiles = Array.from(event.target.files || []);
-    // memorizza sezione sul file e genera preview
-    selectedFiles.forEach((file) => {
-      Object.defineProperty(file, "section", {
-        value: sectionKey,
-        enumerable: true,
-      });
-      setFiles((prev) => [...prev, file]);
-
-      if (file.type?.startsWith("image/")) {
-        const r = new FileReader();
-        r.onload = (ev) =>
-          setFilePreviews((p) => [
-            ...p,
-            {
-              src: ev.target.result,
-              section: sectionKey,
-              name: file.name,
-              type: file.type,
-            },
-          ]);
-        r.readAsDataURL(file);
-      } else {
-        setFilePreviews((p) => [
-          ...p,
-          { src: null, section: sectionKey, name: file.name, type: file.type },
-        ]);
-      }
-    });
-
-    // aggiorna anche lo stato "allegati" a gruppi per la POST
-    setAllegati((s) => ({
-      ...s,
-      [sectionKey]: [...(s[sectionKey] || []), ...selectedFiles],
-    }));
-  };
-
-  const removeFile = (index) => {
-    const preview = filePreviews[index];
-    const sectionKey = preview?.section;
-    const name = preview?.name;
-
-    setFiles((prev) => prev.filter((_, i) => i !== index));
-    setFilePreviews((prev) => prev.filter((_, i) => i !== index));
-
-    // rimuovi anche nel gruppo "allegati"
-    if (sectionKey) {
-      setAllegati((s) => ({
-        ...s,
-        [sectionKey]: (s[sectionKey] || []).filter((f) => f.name !== name),
-      }));
-    }
-  };
-
-  const getFilesBySection = (sectionKey) =>
-    filePreviews.filter((p) => p.section === sectionKey);
 
   const getSigDataUrl = (ref) =>
     ref?.current && !ref.current.isEmpty()
@@ -162,12 +121,100 @@ export default function CompilerContoTermico() {
       r.readAsDataURL(file);
     });
 
+  // --- Helpers upload stile Dojo (FIX: remove preciso con id) ---
+  const handleFileChange = (event, sectionKey) => {
+    const selectedFiles = Array.from(event.target.files || []);
+    if (!selectedFiles.length) return;
+
+    // reset input così puoi ricaricare lo stesso file se vuoi
+    event.target.value = "";
+
+    selectedFiles.forEach((file) => {
+      Object.defineProperty(file, "section", {
+        value: sectionKey,
+        enumerable: true,
+      });
+
+      const id = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
+      setFiles((prev) => [...prev, file]);
+
+      if (file.type?.startsWith("image/")) {
+        const r = new FileReader();
+        r.onload = (ev) =>
+          setFilePreviews((p) => [
+            ...p,
+            {
+              id,
+              src: ev.target.result,
+              section: sectionKey,
+              name: file.name,
+              type: file.type,
+              size: file.size,
+            },
+          ]);
+        r.readAsDataURL(file);
+      } else {
+        setFilePreviews((p) => [
+          ...p,
+          {
+            id,
+            src: null,
+            section: sectionKey,
+            name: file.name,
+            type: file.type,
+            size: file.size,
+          },
+        ]);
+      }
+
+      setAllegati((s) => ({
+        ...s,
+        [sectionKey]: [...(s[sectionKey] || []), file],
+      }));
+    });
+  };
+
+  const removeFileById = (previewId) => {
+    const prev = filePreviews.find((p) => p.id === previewId);
+    if (!prev) return;
+
+    const sectionKey = prev.section;
+    const name = prev.name;
+
+    setFilePreviews((p) => p.filter((x) => x.id !== previewId));
+
+    setFiles((prevFiles) =>
+      prevFiles.filter((f) => !(f.name === name && f.section === sectionKey)),
+    );
+
+    setAllegati((s) => ({
+      ...s,
+      [sectionKey]: (s[sectionKey] || []).filter((f) => f.name !== name),
+    }));
+  };
+
+  const getFilesBySection = (sectionKey) =>
+    filePreviews.filter((p) => p.section === sectionKey);
+
   // ----------- GENERA PDF ----------
   const generatePdf = async () => {
     const bytes = await fetch("/modelloconto.pdf").then((r) => r.arrayBuffer());
     const pdfDoc = await PDFDocument.load(bytes);
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-    const [page4, page5] = pdfDoc.getPages();
+
+    const pages = pdfDoc.getPages();
+
+    // ✅ PAGINE 4 e 5 (indice 3 e 4) perché getPages() è 0-based
+    const page4 = pages[3];
+    const page5 = pages[4];
+
+    if (!page4 || !page5) {
+      alert(
+        `Errore: il PDF non ha abbastanza pagine. Trovate: ${pages.length}. Servono almeno 5 pagine.`,
+      );
+      return;
+    }
 
     const draw = (page, text, { x, y, size = 12 }) =>
       page.drawText(String(text || ""), {
@@ -178,43 +225,63 @@ export default function CompilerContoTermico() {
         color: rgb(0, 0, 0),
       });
 
-    // p1 Privato
+    const debugMark = (page, label, { x, y }) => {
+      page.drawCircle({
+        x,
+        y,
+        size: 2.2,
+        color: rgb(1, 0, 0),
+      });
+      page.drawText(label, {
+        x: x + 6,
+        y: y - 2,
+        size: 7,
+        font,
+        color: rgb(1, 0, 0),
+      });
+    };
+
+    // p4 Privato
     draw(page4, form.p_nome, POS.p_nome);
-    draw(page4, form.p_cognome, POS.p_cognome);
     draw(page4, form.p_iban, POS.p_iban);
-    draw(page4, form.p_cap, POS.p_cap);
+    draw(page4, form.p_zona, POS.p_zona);
     draw(page4, form.p_indirizzo, POS.p_indirizzo);
     draw(page4, form.p_comune, POS.p_comune);
     draw(page4, form.p_telefono, POS.p_telefono);
     draw(page4, form.p_mail, POS.p_mail);
-    // p1 Azienda
+    draw(page4, form.p_categoria, POS.p_categoria);
+
+    // p4 Azienda
     draw(page4, form.a_denominazione, POS.a_denominazione);
     draw(page4, form.a_iban, POS.a_iban);
-    draw(page4, form.a_cap, POS.a_cap);
+    draw(page4, form.a_zona, POS.a_zona);
     draw(page4, form.a_indirizzo, POS.a_indirizzo);
     draw(page4, form.a_comune, POS.a_comune);
     draw(page4, form.a_telefono, POS.a_telefono);
     draw(page4, form.a_mail, POS.a_mail);
-    // p2
+    draw(page4, form.a_categoria, POS.a_categoria);
+
+    // p5
     draw(page5, form.luogoedata, POS.luogoedata);
 
-    // Firme su p2
+    // Firme su p5
     const s1 = getSigDataUrl(sigBenefRef);
     if (s1) {
       const b1 = await fetch(s1).then((r) => r.arrayBuffer());
       const png1 = await pdfDoc.embedPng(b1);
-      page2.drawImage(png1, {
+      page5.drawImage(png1, {
         x: POS.firma_benef.x,
         y: POS.firma_benef.y,
         width: POS.firma_benef.w,
         height: POS.firma_benef.h,
       });
     }
+
     const s2 = getSigDataUrl(sigRespRef);
     if (s2) {
       const b2 = await fetch(s2).then((r) => r.arrayBuffer());
       const png2 = await pdfDoc.embedPng(b2);
-      page2.drawImage(png2, {
+      page5.drawImage(png2, {
         x: POS.firma_resp.x,
         y: POS.firma_resp.y,
         width: POS.firma_resp.w,
@@ -222,8 +289,40 @@ export default function CompilerContoTermico() {
       });
     }
 
+    // ✅ DEBUG: marker coordinate
+    if (DEBUG_COORDS) {
+      const keysP4 = [
+        "p_nome",
+        "p_iban",
+        "p_zona",
+        "p_indirizzo",
+        "p_comune",
+        "p_telefono",
+        "p_mail",
+        "p_categoria",
+        "a_denominazione",
+        "a_iban",
+        "a_zona",
+        "a_indirizzo",
+        "a_comune",
+        "a_telefono",
+        "a_mail",
+        "a_categoria",
+      ];
+      keysP4.forEach((k) => debugMark(page4, k, POS[k]));
+
+      const keysP5 = ["luogoedata"];
+      keysP5.forEach((k) => debugMark(page5, k, POS[k]));
+
+      debugMark(page5, "firma_benef", POS.firma_benef);
+      debugMark(page5, "firma_resp", POS.firma_resp);
+    }
+
     const out = await pdfDoc.save();
     const blob = new Blob([out], { type: "application/pdf" });
+
+    if (pdfUrl) URL.revokeObjectURL(pdfUrl);
+
     const url = URL.createObjectURL(blob);
     setPdfUrl(url);
   };
@@ -237,52 +336,50 @@ export default function CompilerContoTermico() {
 
     setIsSubmitting(true);
     try {
-      // PDF generato
       const pdfBlob = await fetch(pdfUrl).then((r) => r.blob());
       const pdfBase64 = await fileToBase64(
         new File([pdfBlob], "contratto_conto_termico.pdf", {
           type: "application/pdf",
-        })
+        }),
       );
 
-      // Firme singole (opzionali)
       const s1 = getSigDataUrl(sigBenefRef);
       const s2 = getSigDataUrl(sigRespRef);
       const firmaBenefBase64 = s1 ? String(s1).split(",")[1] : null;
       const firmaRespBase64 = s2 ? String(s2).split(",")[1] : null;
 
-      // packMany: File[] -> {filename, base64, mime}[]
       const packMany = async (filesArr) =>
         Promise.all(
           (filesArr || []).map(async (f) => ({
             filename: f.name,
             base64: await fileToBase64(f),
             mime: f.type || "application/octet-stream",
-          }))
+          })),
         );
 
       const payload = {
         privato: {
           nome: form.p_nome,
-          cognome: form.p_cognome,
           iban: form.p_iban,
           indirizzo: form.p_indirizzo,
           comune: form.p_comune,
-          cap: form.p_cap,
+          zona: form.p_zona,
           telefono: form.p_telefono,
           email: form.p_mail,
+          categoria_catastale: form.p_categoria,
         },
         azienda: {
           denominazione: form.a_denominazione,
           iban: form.a_iban,
           indirizzo: form.a_indirizzo,
           comune: form.a_comune,
-          cap: form.a_cap,
+          zona: form.a_zona,
           telefono: form.a_telefono,
           email: form.a_mail,
+          categoria_catastale: form.a_categoria,
         },
         luogoedata: form.luogoedata,
-        relazioneTesto: form.relazioneTesto, // backend lo trasforma in .txt
+        relazioneTesto: form.relazioneTesto,
 
         allegati: {
           codice_fiscale: await packMany(allegati.codice_fiscale),
@@ -324,6 +421,7 @@ export default function CompilerContoTermico() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
+
       const txt = await res.text();
       if (!res.ok) throw new Error(`HTTP ${res.status} - ${txt || "no body"}`);
 
@@ -345,7 +443,7 @@ export default function CompilerContoTermico() {
   return (
     <div className="min-h-screen bg-gray-50 py-4 px-3 sm:py-8 sm:px-6 lg:px-8">
       <div className="max-w-5xl mx-auto bg-white shadow-lg rounded-xl p-4 sm:p-6 lg:p-8 space-y-6">
-        {/* Top bar con "Torna alla Home" */}
+        {/* Top bar */}
         <div className="flex items-center justify-between">
           <h2 className="text-2xl sm:text-3xl font-bold text-blue-900">
             Conto Termico 3.0 — Compilazione PDF
@@ -371,13 +469,7 @@ export default function CompilerContoTermico() {
               value={form.p_nome}
               onChange={onChange}
             />
-            <input
-              className="px-3 py-2 border rounded-lg"
-              name="p_cognome"
-              placeholder="Cognome"
-              value={form.p_cognome}
-              onChange={onChange}
-            />
+
             <input
               className="px-3 py-2 border rounded-lg"
               name="p_iban"
@@ -387,11 +479,19 @@ export default function CompilerContoTermico() {
             />
             <input
               className="px-3 py-2 border rounded-lg"
-              name="p_cap"
-              placeholder="CAP"
-              value={form.p_cap}
+              name="p_zona"
+              placeholder="Zona Climatica"
+              value={form.p_zona}
               onChange={onChange}
             />
+            <input
+              className="px-3 py-2 border rounded-lg"
+              name="p_categoria"
+              placeholder="Categoria catastale"
+              value={form.p_categoria}
+              onChange={onChange}
+            />
+
             <input
               className="px-3 py-2 border rounded-lg sm:col-span-2"
               name="p_indirizzo"
@@ -445,9 +545,9 @@ export default function CompilerContoTermico() {
             />
             <input
               className="px-3 py-2 border rounded-lg"
-              name="a_cap"
-              placeholder="CAP"
-              value={form.a_cap}
+              name="a_zona"
+              placeholder="Zona Climatica"
+              value={form.a_zona}
               onChange={onChange}
             />
             <input
@@ -478,13 +578,20 @@ export default function CompilerContoTermico() {
               value={form.a_mail}
               onChange={onChange}
             />
+            <input
+              className="px-3 py-2 border rounded-lg"
+              name="a_categoria"
+              placeholder="Categoria catastale"
+              value={form.a_categoria}
+              onChange={onChange}
+            />
           </div>
         </section>
 
-        {/* Pagina 2 */}
+        {/* Pagina 5 */}
         <section className="space-y-3">
           <h3 className="text-lg sm:text-xl font-semibold text-blue-900">
-            Luogo e data (pagina 2)
+            Luogo e data (pagina 5)
           </h3>
           <input
             className="px-3 py-2 border rounded-lg w-full"
@@ -513,59 +620,54 @@ export default function CompilerContoTermico() {
           </p>
         </section>
 
-        {/* Allegati (stile Dojo, 5 sezioni) */}
+        {/* Allegati */}
         <section className="space-y-6">
           <h2 className="text-xl sm:text-2xl font-bold text-blue-900 text-center">
             Caricamento Documenti
           </h2>
 
-          {/* Codice Fiscale */}
           <UploadSection
             title="🧾 Codice Fiscale"
             sectionKey="codice_fiscale"
             onChange={handleFileChange}
             getFilesBySection={getFilesBySection}
-            removeFile={removeFile}
+            removeFileById={removeFileById}
             accent="blue"
           />
 
-          {/* Documenti d’identità */}
           <UploadSection
             title="🆔 Documenti di identità"
             sectionKey="documento_identita"
             onChange={handleFileChange}
             getFilesBySection={getFilesBySection}
-            removeFile={removeFile}
+            removeFileById={removeFileById}
             accent="green"
           />
 
-          {/* Catastale immobile */}
           <UploadSection
             title="🏠 Catastale immobile"
             sectionKey="catastale"
             onChange={handleFileChange}
             getFilesBySection={getFilesBySection}
-            removeFile={removeFile}
+            removeFileById={removeFileById}
             accent="amber"
           />
 
-          {/* Foto vecchio generatore */}
           <UploadSection
             title="📸 Foto vecchio generatore"
             sectionKey="foto_generatore"
             onChange={handleFileChange}
             getFilesBySection={getFilesBySection}
-            removeFile={removeFile}
+            removeFileById={removeFileById}
             accent="purple"
           />
 
-          {/* Visura camerale */}
           <UploadSection
             title="📋 Visura camerale"
             sectionKey="visura"
             onChange={handleFileChange}
             getFilesBySection={getFilesBySection}
-            removeFile={removeFile}
+            removeFileById={removeFileById}
             accent="indigo"
           />
 
@@ -614,6 +716,7 @@ export default function CompilerContoTermico() {
                 {sig1On ? "🔓 Disattiva Firma" : "🔒 Attiva Firma"}
               </button>
             </div>
+
             {sig1On ? (
               <>
                 <div className="border rounded bg-white overflow-hidden">
@@ -656,6 +759,7 @@ export default function CompilerContoTermico() {
                 {sig2On ? "🔓 Disattiva Firma" : "🔒 Attiva Firma"}
               </button>
             </div>
+
             {sig2On ? (
               <>
                 <div className="border rounded bg-white overflow-hidden">
@@ -692,8 +796,11 @@ export default function CompilerContoTermico() {
           >
             Genera Anteprima PDF
           </button>
+
           <button
-            onClick={downloadPdf}
+            onClick={() =>
+              pdfUrl && saveAs(pdfUrl, "contratto_conto_termico.pdf")
+            }
             disabled={!pdfUrl}
             className={`w-full sm:w-auto ${
               pdfUrl
@@ -703,6 +810,7 @@ export default function CompilerContoTermico() {
           >
             Scarica PDF
           </button>
+
           <button
             onClick={submit}
             disabled={isSubmitting}
@@ -732,79 +840,83 @@ export default function CompilerContoTermico() {
   );
 }
 
-/** Componente riutilizzabile per le sezioni upload (stile Dojo) */
+/** Sezioni upload (stile Dojo) — FIX: classi Tailwind statiche + remove by id */
 function UploadSection({
   title,
   sectionKey,
   onChange,
   getFilesBySection,
-  removeFile,
+  removeFileById,
   accent = "blue",
 }) {
-  const colorMap = {
-    blue: ["blue-200", "blue-900", "blue-50", "blue-700", "blue-100"],
-    green: ["green-200", "green-900", "green-50", "green-700", "green-100"],
-    amber: ["amber-200", "amber-900", "amber-50", "amber-700", "amber-100"],
-    purple: [
-      "purple-200",
-      "purple-900",
-      "purple-50",
-      "purple-700",
-      "purple-100",
-    ],
-    indigo: [
-      "indigo-200",
-      "indigo-900",
-      "indigo-50",
-      "indigo-700",
-      "indigo-100",
-    ],
-  }[accent] || ["blue-200", "blue-900", "blue-50", "blue-700", "blue-100"];
+  const styles = useMemo(() => {
+    const map = {
+      blue: {
+        wrap: "bg-white border border-blue-200 rounded-lg p-6 shadow-sm",
+        title:
+          "text-lg sm:text-xl font-semibold text-blue-900 flex items-center gap-2",
+        file: "block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100",
+      },
+      green: {
+        wrap: "bg-white border border-green-200 rounded-lg p-6 shadow-sm",
+        title:
+          "text-lg sm:text-xl font-semibold text-green-900 flex items-center gap-2",
+        file: "block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100",
+      },
+      amber: {
+        wrap: "bg-white border border-amber-200 rounded-lg p-6 shadow-sm",
+        title:
+          "text-lg sm:text-xl font-semibold text-amber-900 flex items-center gap-2",
+        file: "block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100",
+      },
+      purple: {
+        wrap: "bg-white border border-purple-200 rounded-lg p-6 shadow-sm",
+        title:
+          "text-lg sm:text-xl font-semibold text-purple-900 flex items-center gap-2",
+        file: "block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100",
+      },
+      indigo: {
+        wrap: "bg-white border border-indigo-200 rounded-lg p-6 shadow-sm",
+        title:
+          "text-lg sm:text-xl font-semibold text-indigo-900 flex items-center gap-2",
+        file: "block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100",
+      },
+    };
 
-  const [border, titleColor, fileBg, fileText, fileHover] = colorMap;
+    return map[accent] || map.blue;
+  }, [accent]);
+
+  const previews = getFilesBySection(sectionKey);
 
   return (
-    <div
-      className={`bg-white border border-${border} rounded-lg p-6 shadow-sm`}
-    >
+    <div className={styles.wrap}>
       <div className="space-y-4">
-        <h3
-          className={`text-lg sm:text-xl font-semibold text-${titleColor} flex items-center gap-2`}
-        >
-          {title}
-        </h3>
+        <h3 className={styles.title}>{title}</h3>
+
         <input
           type="file"
           multiple
           accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
           onChange={(e) => onChange(e, sectionKey)}
-          className={`block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4
-            file:rounded-full file:border-0
-            file:text-sm file:font-semibold
-            file:bg-${fileBg} file:text-${fileText}
-            hover:file:bg-${fileHover}`}
+          className={styles.file}
         />
+
         <div className="flex flex-wrap gap-4">
-          {getFilesBySection(sectionKey).map((preview, idx) => (
+          {previews.map((preview) => (
             <div
-              key={`${sectionKey}-${idx}`}
+              key={preview.id}
               className="border border-gray-300 p-2 rounded-lg w-40 relative"
             >
               <button
-                onClick={() =>
-                  removeFile(
-                    getFilesBySection(sectionKey)
-                      .slice(0, idx)
-                      .reduce((acc) => acc + 1, 0) +
-                      fileIndexOffset(sectionKey, idx, getFilesBySection)
-                  )
-                }
+                onClick={() => removeFileById(preview.id)}
                 className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600"
                 title="Rimuovi"
               >
                 ×
               </button>
+
               <p className="text-xs font-medium break-words">{preview.name}</p>
+
               {preview.type?.startsWith("image/") ? (
                 <img
                   src={preview.src}
@@ -824,22 +936,4 @@ function UploadSection({
       </div>
     </div>
   );
-}
-
-// Calcola l’indice assoluto nel vettore filePreviews per il bottone “×”
-// (serve perché stiamo mappando per sezione)
-function fileIndexOffset(sectionKey, idxInSection, getFilesBySection) {
-  const sections = [
-    "utenze luce e gas",
-    "documento_identita e codice_fiscale",
-    "catastale",
-    "foto_generatore",
-    "visura",
-  ];
-  let offset = 0;
-  for (const s of sections) {
-    if (s === sectionKey) break;
-    offset += getFilesBySection(s).length;
-  }
-  return offset + idxInSection;
 }
