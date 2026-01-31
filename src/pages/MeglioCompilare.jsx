@@ -12,6 +12,10 @@ const DEBUG_COORDS = false;
 
 // ====== Coordinate di stampa (NON MODIFICATE) ======
 const POS = {
+  // FIRME pagina 4 (più piccole)
+  firma_benef_p4: { x: 120, y: 110, w: 140, h: 45 },
+  firma_resp_p4: { x: 420, y: 110, w: 140, h: 45 },
+
   // Pagina 4 (nel PDF) - PRIVATO
   p_nome: { x: 145, y: 680, size: 12 },
   p_iban: { x: 340, y: 640, size: 12 },
