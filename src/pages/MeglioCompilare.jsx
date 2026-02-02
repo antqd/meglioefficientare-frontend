@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 
 // ✅ NUOVO ENDPOINT (quello che hai incollato tu)
 const API_INVIO =
-  "https://bc.davveroo.it/api/email/meglioefficientare-conto-termico-3";
+  "https://api.davveroo.it/api/email/meglioefficientare-conto-termico-3";
 
 // ✅ Metti true quando vuoi vedere sul PDF i marker delle coordinate (pallino + nome campo)
 const DEBUG_COORDS = false;
