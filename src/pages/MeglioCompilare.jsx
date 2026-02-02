@@ -5,7 +5,7 @@ import { saveAs } from "file-saver";
 import SignatureCanvas from "react-signature-canvas";
 import { useNavigate } from "react-router-dom";
 
-// ✅ NUOVO ENDPOINT (quello che hai incollato tu)
+// ✅ NUOVO ENDPOINT (come nel tuo routes/emailRoutes.js)
 const API_INVIO =
   "https://api.davveroo.it/api/email/meglioefficientare-conto-termico-3";
 
@@ -89,8 +89,6 @@ export default function CompilerContoTermico() {
   });
 
   const [pdfUrl, setPdfUrl] = useState(null);
-  const pdfUrlRef = useRef(null);
-
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [sig1On, setSig1On] = useState(false);
@@ -98,24 +96,12 @@ export default function CompilerContoTermico() {
   const sigBenefRef = useRef(null);
   const sigRespRef = useRef(null);
 
-  // cleanup corretto: revoca SEMPRE la vecchia url quando cambia / unmount
   useEffect(() => {
-    const prev = pdfUrlRef.current;
-    if (prev && prev !== pdfUrl) {
-      try {
-        URL.revokeObjectURL(prev);
-      } catch {}
-    }
-    pdfUrlRef.current = pdfUrl;
-
     return () => {
-      if (pdfUrlRef.current) {
-        try {
-          URL.revokeObjectURL(pdfUrlRef.current);
-        } catch {}
-      }
+      if (pdfUrl) URL.revokeObjectURL(pdfUrl);
     };
-  }, [pdfUrl]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const onChange = (e) =>
     setForm((s) => ({ ...s, [e.target.name]: e.target.value }));
@@ -146,7 +132,6 @@ export default function CompilerContoTermico() {
     const selectedFiles = Array.from(event.target.files || []);
     if (!selectedFiles.length) return;
 
-    // reset input così puoi ricaricare lo stesso file se vuoi
     event.target.value = "";
 
     selectedFiles.forEach((file) => {
@@ -224,6 +209,8 @@ export default function CompilerContoTermico() {
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
     const pages = pdfDoc.getPages();
+
+    // ✅ PAGINE 4 e 5 (indice 3 e 4) perché getPages() è 0-based
     const page4 = pages[3];
     const page5 = pages[4];
 
@@ -244,7 +231,12 @@ export default function CompilerContoTermico() {
       });
 
     const debugMark = (page, label, { x, y }) => {
-      page.drawCircle({ x, y, size: 2.2, color: rgb(1, 0, 0) });
+      page.drawCircle({
+        x,
+        y,
+        size: 2.2,
+        color: rgb(1, 0, 0),
+      });
       page.drawText(label, {
         x: x + 6,
         y: y - 2,
@@ -254,7 +246,7 @@ export default function CompilerContoTermico() {
       });
     };
 
-    // ====== TEXT P4 ======
+    // p4 Privato
     draw(page4, form.p_nome, POS.p_nome);
     draw(page4, form.p_iban, POS.p_iban);
     draw(page4, form.p_zona, POS.p_zona);
@@ -264,6 +256,7 @@ export default function CompilerContoTermico() {
     draw(page4, form.p_mail, POS.p_mail);
     draw(page4, form.p_categoria, POS.p_categoria);
 
+    // p4 Azienda
     draw(page4, form.a_denominazione, POS.a_denominazione);
     draw(page4, form.a_iban, POS.a_iban);
     draw(page4, form.a_zona, POS.a_zona);
@@ -273,34 +266,56 @@ export default function CompilerContoTermico() {
     draw(page4, form.a_mail, POS.a_mail);
     draw(page4, form.a_categoria, POS.a_categoria);
 
-    // ====== TEXT P5 ======
+    // p5
     draw(page5, form.luogoedata, POS.luogoedata);
 
-    // ====== FIRME su P4 + P5 (NON SOLO UNA) ======
+    // === FIRME (stessa immagine su p4 e p5) ===
     const s1 = getSigDataUrl(sigBenefRef);
     const s2 = getSigDataUrl(sigRespRef);
 
-    const drawSig = async (sigDataUrl, page, pos) => {
-      if (!sigDataUrl) return;
-      const bytes = await fetch(sigDataUrl).then((r) => r.arrayBuffer());
-      const png = await pdfDoc.embedPng(bytes);
-      page.drawImage(png, {
-        x: pos.x,
-        y: pos.y,
-        width: pos.w,
-        height: pos.h,
+    if (s1) {
+      const b1 = await fetch(s1).then((r) => r.arrayBuffer());
+      const png1 = await pdfDoc.embedPng(b1);
+
+      // pagina 4 (più piccola)
+      page4.drawImage(png1, {
+        x: POS.firma_benef_p4.x,
+        y: POS.firma_benef_p4.y,
+        width: POS.firma_benef_p4.w,
+        height: POS.firma_benef_p4.h,
       });
-    };
 
-    // Beneficiario
-    await drawSig(s1, page4, POS.firma_benef_p4);
-    await drawSig(s1, page5, POS.firma_benef);
+      // pagina 5 (normale)
+      page5.drawImage(png1, {
+        x: POS.firma_benef.x,
+        y: POS.firma_benef.y,
+        width: POS.firma_benef.w,
+        height: POS.firma_benef.h,
+      });
+    }
 
-    // Responsabile
-    await drawSig(s2, page4, POS.firma_resp_p4);
-    await drawSig(s2, page5, POS.firma_resp);
+    if (s2) {
+      const b2 = await fetch(s2).then((r) => r.arrayBuffer());
+      const png2 = await pdfDoc.embedPng(b2);
 
-    // ====== DEBUG ======
+      // pagina 4 (più piccola)
+      page4.drawImage(png2, {
+        x: POS.firma_resp_p4.x,
+        y: POS.firma_resp_p4.y,
+        width: POS.firma_resp_p4.w,
+        height: POS.firma_resp_p4.h,
+      });
+
+      // pagina 5 (normale)
+      page5.drawImage(png2, {
+        x: POS.firma_resp.x,
+        y: POS.firma_resp.y,
+        width: POS.firma_resp.w,
+        height: POS.firma_resp.h,
+      });
+    }
+
+    // ✅ DEBUG: marker coordinate
     if (DEBUG_COORDS) {
       const keysP4 = [
         "p_nome",
@@ -319,19 +334,22 @@ export default function CompilerContoTermico() {
         "a_telefono",
         "a_mail",
         "a_categoria",
-        "firma_benef_p4",
-        "firma_resp_p4",
       ];
-      keysP4.forEach((k) => POS[k] && debugMark(page4, k, POS[k]));
+      keysP4.forEach((k) => debugMark(page4, k, POS[k]));
 
       const keysP5 = ["luogoedata"];
-      keysP5.forEach((k) => POS[k] && debugMark(page5, k, POS[k]));
+      keysP5.forEach((k) => debugMark(page5, k, POS[k]));
+
+      debugMark(page4, "firma_benef_p4", POS.firma_benef_p4);
+      debugMark(page4, "firma_resp_p4", POS.firma_resp_p4);
       debugMark(page5, "firma_benef", POS.firma_benef);
       debugMark(page5, "firma_resp", POS.firma_resp);
     }
 
     const out = await pdfDoc.save();
     const blob = new Blob([out], { type: "application/pdf" });
+
+    if (pdfUrl) URL.revokeObjectURL(pdfUrl);
 
     const url = URL.createObjectURL(blob);
     setPdfUrl(url);
@@ -340,16 +358,18 @@ export default function CompilerContoTermico() {
   const downloadPdf = () =>
     pdfUrl && saveAs(pdfUrl, "contratto_conto_termico.pdf");
 
-  // ----------- INVIO (payload “pulito” per buildContoTermico3Payload) ----------
+  // ----------- INVIO ----------
   const submit = async () => {
     if (!pdfUrl) return alert("Genera prima il PDF.");
 
-    const clientEmail = (form.p_mail || form.a_mail || "").trim();
-    if (!clientEmail) return alert("Inserisci una mail (Privato o Azienda).");
+    // ✅ backend ti risponde missing_fields se email root è vuota
+    if (!String(form.p_mail || "").trim()) {
+      return alert("Inserisci la mail del cliente (campo Mail).");
+    }
 
     setIsSubmitting(true);
     try {
-      // PDF generato -> base64
+      // PDF generato
       const pdfBlob = await fetch(pdfUrl).then((r) => r.blob());
       const pdfBase64 = await fileToBase64(
         new File([pdfBlob], "contratto_conto_termico.pdf", {
@@ -357,30 +377,73 @@ export default function CompilerContoTermico() {
         }),
       );
 
-      // firme -> base64 (solo contenuto, senza prefix)
+      // Firme singole (opzionali) - base64 puro
       const s1 = getSigDataUrl(sigBenefRef);
       const s2 = getSigDataUrl(sigRespRef);
       const firmaBenefBase64 = s1 ? String(s1).split(",")[1] : null;
       const firmaRespBase64 = s2 ? String(s2).split(",")[1] : null;
 
-      // packMany: File[] -> { filename, base64, mime }[]
+      // packMany: File[] -> {filename, base64, contentType}[]
       const packMany = async (filesArr) =>
         Promise.all(
           (filesArr || []).map(async (f) => ({
             filename: f.name,
             base64: await fileToBase64(f),
-            mime: f.type || "application/octet-stream",
+            contentType: f.type || "application/octet-stream",
           })),
         );
 
-      // ✅ BODY per buildContoTermico3Payload(req.body)
-      // - clientEmail OBBLIGATORIA (lato backend te la controlla)
-      // - subject opzionale: se non lo metti, buildContoTermico3Payload può generarlo
-      // - data + allegati già normalizzati
-      const body = {
-        clientEmail,
-        subject: `Conto Termico 3.0 — pratica ricevuta (${clientEmail})`,
+      // ✅ Allegati raggruppati (ti servono comunque nel payload)
+      const grouped = {
+        codice_fiscale: await packMany(allegati.codice_fiscale),
+        documento_identita: await packMany(allegati.documento_identita),
+        catastale: await packMany(allegati.catastale),
+        foto_generatore: await packMany(allegati.foto_generatore),
+        visura: await packMany(allegati.visura),
 
+        pdf_modulo: [
+          {
+            filename: "contratto_conto_termico.pdf",
+            base64: pdfBase64,
+            contentType: "application/pdf",
+          },
+        ],
+        firma_beneficiario: firmaBenefBase64
+          ? [
+              {
+                filename: "firma_beneficiario.png",
+                base64: firmaBenefBase64,
+                contentType: "image/png",
+              },
+            ]
+          : [],
+        firma_responsabile: firmaRespBase64
+          ? [
+              {
+                filename: "firma_responsabile.png",
+                base64: firmaRespBase64,
+                contentType: "image/png",
+              },
+            ]
+          : [],
+      };
+
+      // ✅ COMPATIBILITÀ con il tuo backend attuale:
+      // lui legge buildDojoAttachments(body.attachments) e clientEmail da body.email/body.mail
+      const attachments = Object.values(grouped).flat();
+
+      const payload = {
+        // ✅ campi ROOT richiesti dal builder attuale
+        nome: form.p_nome, // se vuoi separare nome/cognome in futuro, ok
+        cognome: "",
+        email: form.p_mail, // <<< QUESTO ti risolve "missing_fields"
+        telefono: form.p_telefono,
+        messaggio: "",
+
+        // ✅ attachments ROOT (compatibilità buildDojoAttachments)
+        attachments,
+
+        // ✅ tieni anche la struttura nuova (utile se poi aggiorni il backend)
         privato: {
           nome: form.p_nome,
           iban: form.p_iban,
@@ -391,7 +454,6 @@ export default function CompilerContoTermico() {
           email: form.p_mail,
           categoria_catastale: form.p_categoria,
         },
-
         azienda: {
           denominazione: form.a_denominazione,
           iban: form.a_iban,
@@ -402,50 +464,16 @@ export default function CompilerContoTermico() {
           email: form.a_mail,
           categoria_catastale: form.a_categoria,
         },
-
         luogoedata: form.luogoedata,
         relazioneTesto: form.relazioneTesto,
 
-        allegati: {
-          codice_fiscale: await packMany(allegati.codice_fiscale),
-          documento_identita: await packMany(allegati.documento_identita),
-          catastale: await packMany(allegati.catastale),
-          foto_generatore: await packMany(allegati.foto_generatore),
-          visura: await packMany(allegati.visura),
-
-          pdf_modulo: [
-            {
-              filename: "contratto_conto_termico.pdf",
-              base64: pdfBase64,
-              mime: "application/pdf",
-            },
-          ],
-
-          firma_beneficiario: firmaBenefBase64
-            ? [
-                {
-                  filename: "firma_beneficiario.png",
-                  base64: firmaBenefBase64,
-                  mime: "image/png",
-                },
-              ]
-            : [],
-          firma_responsabile: firmaRespBase64
-            ? [
-                {
-                  filename: "firma_responsabile.png",
-                  base64: firmaRespBase64,
-                  mime: "image/png",
-                },
-              ]
-            : [],
-        },
+        allegati: grouped,
       };
 
       const res = await fetch(API_INVIO, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+        body: JSON.stringify(payload),
       });
 
       const txt = await res.text();
@@ -459,7 +487,7 @@ export default function CompilerContoTermico() {
       });
     } catch (e) {
       console.error(e);
-      alert("Errore invio: " + (e?.message || e));
+      alert("Errore invio: " + e.message);
     } finally {
       setIsSubmitting(false);
     }
@@ -542,15 +570,11 @@ export default function CompilerContoTermico() {
             <input
               className="px-3 py-2 border rounded-lg"
               name="p_mail"
-              placeholder="Mail (cliente)"
+              placeholder="Mail (obbligatoria)"
               value={form.p_mail}
               onChange={onChange}
             />
           </div>
-          <p className="text-xs text-gray-500">
-            La mail del cliente viene presa da <b>Privato</b> se presente,
-            altrimenti da <b>Azienda</b>.
-          </p>
         </section>
 
         {/* AZIENDA */}
@@ -604,7 +628,7 @@ export default function CompilerContoTermico() {
             <input
               className="px-3 py-2 border rounded-lg"
               name="a_mail"
-              placeholder="Mail azienda"
+              placeholder="Mail"
               value={form.a_mail}
               onChange={onChange}
             />
@@ -646,7 +670,7 @@ export default function CompilerContoTermico() {
           />
           <p className="text-xs text-gray-500">
             Questo testo sarà allegato come file <b>relazione_tecnica.txt</b>{" "}
-            (lato backend) nella mail.
+            nella mail inviata dal backend (se il builder la supporta).
           </p>
         </section>
 
@@ -828,7 +852,9 @@ export default function CompilerContoTermico() {
           </button>
 
           <button
-            onClick={downloadPdf}
+            onClick={() =>
+              pdfUrl && saveAs(pdfUrl, "contratto_conto_termico.pdf")
+            }
             disabled={!pdfUrl}
             className={`w-full sm:w-auto ${
               pdfUrl
@@ -868,7 +894,7 @@ export default function CompilerContoTermico() {
   );
 }
 
-/** Sezioni upload (stile Dojo) */
+/** Sezioni upload (stile Dojo) — classi Tailwind statiche + remove by id */
 function UploadSection({
   title,
   sectionKey,
