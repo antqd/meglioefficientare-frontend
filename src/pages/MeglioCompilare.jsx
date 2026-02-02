@@ -380,39 +380,39 @@ export default function CompilerContoTermico() {
       const body = {
         clientEmail,
         subject: `Conto Termico 3.0 — pratica ricevuta (${clientEmail})`,
-        dati: {
-          privato: {
-            nome: form.p_nome,
-            iban: form.p_iban,
-            indirizzo: form.p_indirizzo,
-            comune: form.p_comune,
-            zona: form.p_zona,
-            telefono: form.p_telefono,
-            email: form.p_mail,
-            categoria_catastale: form.p_categoria,
-          },
-          azienda: {
-            denominazione: form.a_denominazione,
-            iban: form.a_iban,
-            indirizzo: form.a_indirizzo,
-            comune: form.a_comune,
-            zona: form.a_zona,
-            telefono: form.a_telefono,
-            email: form.a_mail,
-            categoria_catastale: form.a_categoria,
-          },
-          luogoedata: form.luogoedata,
-          relazioneTesto: form.relazioneTesto,
+
+        privato: {
+          nome: form.p_nome,
+          iban: form.p_iban,
+          indirizzo: form.p_indirizzo,
+          comune: form.p_comune,
+          zona: form.p_zona,
+          telefono: form.p_telefono,
+          email: form.p_mail,
+          categoria_catastale: form.p_categoria,
         },
+
+        azienda: {
+          denominazione: form.a_denominazione,
+          iban: form.a_iban,
+          indirizzo: form.a_indirizzo,
+          comune: form.a_comune,
+          zona: form.a_zona,
+          telefono: form.a_telefono,
+          email: form.a_mail,
+          categoria_catastale: form.a_categoria,
+        },
+
+        luogoedata: form.luogoedata,
+        relazioneTesto: form.relazioneTesto,
+
         allegati: {
-          // documenti utente
           codice_fiscale: await packMany(allegati.codice_fiscale),
           documento_identita: await packMany(allegati.documento_identita),
           catastale: await packMany(allegati.catastale),
           foto_generatore: await packMany(allegati.foto_generatore),
           visura: await packMany(allegati.visura),
 
-          // modulo pdf generato
           pdf_modulo: [
             {
               filename: "contratto_conto_termico.pdf",
@@ -421,7 +421,6 @@ export default function CompilerContoTermico() {
             },
           ],
 
-          // firme (opzionali)
           firma_beneficiario: firmaBenefBase64
             ? [
                 {
