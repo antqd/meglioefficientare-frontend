@@ -18,6 +18,17 @@ const POS = {
   firma_benef_p4: { x: 120, y: 110, w: 140, h: 45 },
   firma_resp_p4: { x: 420, y: 110, w: 140, h: 45 },
 
+  // ✅ NOTE pagina 4 (testo lungo, va a capo)
+  // (misure precise/posizione te le sistemi tu)
+  note_p4: {
+    x: 55,
+    y: 230, // abbastanza in fondo, ma sopra le firme (y=110)
+    size: 12,
+    maxCharsPerLine: 105, // dopo un tot va a capo (a caratteri)
+    lineHeight: 22,
+    maxLines: 12, // limita quante righe stampare (così non invade troppo)
+  },
+
   // Pagina 4 (nel PDF) - PRIVATO
   p_nome: { x: 145, y: 680, size: 12 },
   p_iban: { x: 340, y: 640, size: 12 },
@@ -202,6 +213,50 @@ export default function CompilerContoTermico() {
   const getFilesBySection = (sectionKey) =>
     filePreviews.filter((p) => p.section === sectionKey);
 
+  // ✅ Wrap semplice a caratteri (come vuoi tu: “dopo un tot va a capo”)
+  const wrapTextByChars = (text, maxCharsPerLine = 90) => {
+    const raw = String(text || "")
+      .replace(/\r\n/g, "\n")
+      .replace(/\r/g, "\n");
+
+    const paragraphs = raw.split("\n");
+    const lines = [];
+
+    for (const para of paragraphs) {
+      const words = para.split(/\s+/).filter(Boolean);
+      if (!words.length) {
+        lines.push(""); // riga vuota per newline
+        continue;
+      }
+
+      let current = "";
+      for (const w of words) {
+        const candidate = current ? `${current} ${w}` : w;
+        if (candidate.length <= maxCharsPerLine) {
+          current = candidate;
+        } else {
+          if (current) lines.push(current);
+          // se una parola è lunghissima, spezzala brutalmente
+          if (w.length > maxCharsPerLine) {
+            let chunk = w;
+            while (chunk.length > maxCharsPerLine) {
+              lines.push(chunk.slice(0, maxCharsPerLine));
+              chunk = chunk.slice(maxCharsPerLine);
+            }
+            current = chunk;
+          } else {
+            current = w;
+          }
+        }
+      }
+      if (current) lines.push(current);
+    }
+
+    // evita troppe righe vuote finali
+    while (lines.length && lines[lines.length - 1] === "") lines.pop();
+    return lines;
+  };
+
   // ----------- GENERA PDF ----------
   const generatePdf = async () => {
     const bytes = await fetch("/modelloconto.pdf").then((r) => r.arrayBuffer());
@@ -229,6 +284,29 @@ export default function CompilerContoTermico() {
         font,
         color: rgb(0, 0, 0),
       });
+
+    const drawWrapped = (page, text, opt) => {
+      const {
+        x,
+        y,
+        size = 9,
+        maxCharsPerLine = 90,
+        lineHeight = 11,
+        maxLines = 12,
+      } = opt || {};
+
+      const lines = wrapTextByChars(text, maxCharsPerLine).slice(0, maxLines);
+
+      lines.forEach((line, idx) => {
+        page.drawText(String(line || ""), {
+          x,
+          y: y - idx * lineHeight,
+          size,
+          font,
+          color: rgb(0, 0, 0),
+        });
+      });
+    };
 
     const debugMark = (page, label, { x, y }) => {
       page.drawCircle({
@@ -265,6 +343,10 @@ export default function CompilerContoTermico() {
     draw(page4, form.a_telefono, POS.a_telefono);
     draw(page4, form.a_mail, POS.a_mail);
     draw(page4, form.a_categoria, POS.a_categoria);
+
+    // ✅ NOTE in pagina 4 (usa relazioneTesto come testo note)
+    // Se vuoi un campo separato “note”, lo aggiungiamo in form e qui lo stampiamo.
+    drawWrapped(page4, form.relazioneTesto, POS.note_p4);
 
     // p5
     draw(page5, form.luogoedata, POS.luogoedata);
@@ -344,6 +426,9 @@ export default function CompilerContoTermico() {
       debugMark(page4, "firma_resp_p4", POS.firma_resp_p4);
       debugMark(page5, "firma_benef", POS.firma_benef);
       debugMark(page5, "firma_resp", POS.firma_resp);
+
+      // ✅ marker NOTE
+      debugMark(page4, "note_p4", POS.note_p4);
     }
 
     const out = await pdfDoc.save();
@@ -671,6 +756,8 @@ export default function CompilerContoTermico() {
           <p className="text-xs text-gray-500">
             Questo testo sarà allegato come file <b>relazione_tecnica.txt</b>{" "}
             nella mail inviata dal backend (se il builder la supporta).
+            <br />
+            Inoltre ora viene anche stampato come NOTE in pagina 4 (in basso).
           </p>
         </section>
 
