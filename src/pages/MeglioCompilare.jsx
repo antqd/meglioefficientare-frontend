@@ -12,6 +12,27 @@ const API_INVIO =
 // ✅ Metti true quando vuoi vedere sul PDF i marker delle coordinate (pallino + nome campo)
 const DEBUG_COORDS = false;
 
+// ✅ Documenti informativi da far visualizzare prima dell’upload
+// Mettili in /public/docs/...
+const REQUIRED_DOCS = [
+  {
+    key: "doc-necessaria",
+    title: "📄 Documentazione necessaria (CT3)",
+    description:
+      "Elenco completo dei documenti richiesti per aprire la pratica Conto Termico 3.0.",
+    href: "/check1.pdf",
+    filename: "check1.pdf",
+  },
+  {
+    key: "checklist",
+    title: "✅ Checklist documenti (CT3)",
+    description:
+      "Checklist rapida per verificare che non manchi nulla prima dell’invio.",
+    href: "check2.pdf",
+    filename: "check2.pdf",
+  },
+];
+
 // ====== Coordinate di stampa (NON MODIFICATE) ======
 const POS = {
   // FIRME pagina 4 (più piccole)
@@ -89,6 +110,10 @@ export default function CompilerContoTermico() {
   // ---- Stato allegati in stile Dojo (con preview) ----
   const [files, setFiles] = useState([]); // tutti i file caricati (riepilogo)
   const [filePreviews, setFilePreviews] = useState([]); // preview con id
+
+  // ✅ Preview documentazione / checklist (iframe)
+  const [docPreviewUrl, setDocPreviewUrl] = useState(null);
+  const [docPreviewTitle, setDocPreviewTitle] = useState("");
 
   // Per la POST strutturata a gruppi:
   const [allegati, setAllegati] = useState({
@@ -345,7 +370,6 @@ export default function CompilerContoTermico() {
     draw(page4, form.a_categoria, POS.a_categoria);
 
     // ✅ NOTE in pagina 4 (usa relazioneTesto come testo note)
-    // Se vuoi un campo separato “note”, lo aggiungiamo in form e qui lo stampiamo.
     drawWrapped(page4, form.relazioneTesto, POS.note_p4);
 
     // p5
@@ -766,6 +790,96 @@ export default function CompilerContoTermico() {
           <h2 className="text-xl sm:text-2xl font-bold text-blue-900 text-center">
             Caricamento Documenti
           </h2>
+
+          {/* ✅ Documentazione necessaria + checklist (prima dell’upload) */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-5">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h3 className="text-lg sm:text-xl font-semibold text-blue-900">
+                  Prima di caricare i documenti
+                </h3>
+                <p className="text-sm text-blue-900/80 mt-1">
+                  Apri/Scarica la documentazione e la checklist per capire cosa
+                  serve e spuntare tutto prima dell’invio.
+                </p>
+              </div>
+
+              {docPreviewUrl ? (
+                <button
+                  onClick={() => {
+                    setDocPreviewUrl(null);
+                    setDocPreviewTitle("");
+                  }}
+                  className="shrink-0 px-3 py-2 rounded-lg bg-white border border-blue-200 text-blue-900 text-sm font-medium hover:bg-blue-100"
+                >
+                  Chiudi anteprima
+                </button>
+              ) : null}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+              {REQUIRED_DOCS.map((d) => (
+                <div
+                  key={d.key}
+                  className="bg-white border border-blue-200 rounded-lg p-4"
+                >
+                  <div className="font-semibold text-blue-900">{d.title}</div>
+                  <div className="text-sm text-gray-600 mt-1">
+                    {d.description}
+                  </div>
+
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDocPreviewUrl(d.href);
+                        setDocPreviewTitle(d.title);
+                      }}
+                      className="px-3 py-2 rounded-lg bg-blue-900 text-white text-sm font-semibold hover:bg-blue-800"
+                    >
+                      👀 Visualizza
+                    </button>
+
+                    <a
+                      href={d.href}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="px-3 py-2 rounded-lg bg-white border border-gray-300 text-sm font-medium hover:bg-gray-50"
+                    >
+                      ↗️ Apri in nuova scheda
+                    </a>
+
+                    <a
+                      href={d.href}
+                      download={d.filename}
+                      className="px-3 py-2 rounded-lg bg-yellow-400 text-black text-sm font-semibold hover:bg-yellow-500"
+                    >
+                      ⬇️ Scarica
+                    </a>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {docPreviewUrl && (
+              <div className="mt-4">
+                <div className="text-sm font-semibold text-blue-900 mb-2">
+                  Anteprima: {docPreviewTitle}
+                </div>
+                <div className="border border-blue-200 rounded-lg overflow-hidden bg-white">
+                  <iframe
+                    src={docPreviewUrl}
+                    className="w-full h-[520px]"
+                    title={`Anteprima - ${docPreviewTitle}`}
+                  />
+                </div>
+                <p className="text-xs text-gray-600 mt-2">
+                  Se non si vede l’anteprima, apri in nuova scheda o scarica il
+                  file.
+                </p>
+              </div>
+            )}
+          </div>
 
           <UploadSection
             title="🧾 Codice Fiscale"
