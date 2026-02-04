@@ -22,32 +22,32 @@ const POS = {
   // (misure precise/posizione te le sistemi tu)
   note_p4: {
     x: 55,
-    y: 230, // abbastanza in fondo, ma sopra le firme (y=110)
+    y: 292, // abbastanza in fondo, ma sopra le firme (y=110)
     size: 12,
-    maxCharsPerLine: 105, // dopo un tot va a capo (a caratteri)
+    maxCharsPerLine: 80, // dopo un tot va a capo (a caratteri)
     lineHeight: 22,
     maxLines: 12, // limita quante righe stampare (così non invade troppo)
   },
 
   // Pagina 4 (nel PDF) - PRIVATO
   p_nome: { x: 145, y: 680, size: 12 },
-  p_iban: { x: 340, y: 640, size: 12 },
-  p_zona: { x: 390, y: 618, size: 12 },
+  p_iban: { x: 360, y: 640, size: 12 },
+  p_zona: { x: 410, y: 618, size: 12 },
   p_indirizzo: { x: 110, y: 660, size: 12 },
   p_comune: { x: 110, y: 640, size: 12 },
   p_telefono: { x: 115, y: 623, size: 12 },
   p_mail: { x: 90, y: 595, size: 12 },
-  p_categoria: { x: 420, y: 595, size: 12 },
+  p_categoria: { x: 440, y: 595, size: 12 },
 
   // Pagina 4 (nel PDF) - AZIENDA
   a_denominazione: { x: 145, y: 525, size: 12 },
-  a_iban: { x: 340, y: 478, size: 12 },
-  a_zona: { x: 390, y: 460, size: 12 },
+  a_iban: { x: 360, y: 478, size: 12 },
+  a_zona: { x: 420, y: 460, size: 12 },
   a_indirizzo: { x: 110, y: 502, size: 12 },
   a_comune: { x: 120, y: 478, size: 12 },
   a_telefono: { x: 120, y: 460, size: 12 },
   a_mail: { x: 90, y: 440, size: 12 },
-  a_categoria: { x: 415, y: 439, size: 12 },
+  a_categoria: { x: 445, y: 439, size: 12 },
 
   // Pagina 5 (nel PDF)
   luogoedata: { x: 116, y: 195, size: 12 },
@@ -266,8 +266,8 @@ export default function CompilerContoTermico() {
     const pages = pdfDoc.getPages();
 
     // ✅ PAGINE 4 e 5 (indice 3 e 4) perché getPages() è 0-based
-    const page4 = pages[3];
-    const page5 = pages[4];
+    const page4 = pages[2];
+    const page5 = pages[3];
 
     if (!page4 || !page5) {
       alert(
