@@ -9,9 +9,9 @@ import { useNavigate } from "react-router-dom";
 const API_INVIO =
   "https://api.davveroo.it/api/email/meglioefficientare-conto-termico-3";
 
-// ✅ template PDF (mettili in /public)
-const TEMPLATE_CONTRATTO_URL = "/esecutivo.pdf";
-const TEMPLATE_ELENCO_URL = "/esecutivo.pdf";
+// ✅ UN SOLO TEMPLATE PDF (mettilo in /public)
+// Esempio: /modelloconto.pdf  (cambia nome se diverso)
+const TEMPLATE_PDF_URL = "/esecutivo.pdf";
 
 // ✅ marker coordinate
 const DEBUG_COORDS = false;
@@ -19,42 +19,32 @@ const DEBUG_COORDS = false;
 /**
  * ===== COORDINATE =====
  * pdf-lib: (0,0) è BOTTOM-LEFT
- *
- * ATTENZIONE: qui ti ho messo coordinate "di base".
  * Metti DEBUG_COORDS=true e regola a precisione.
  */
 const POS = {
   // ===== CONTRATTO - PAGINA 1 =====
-  // (dati Cliente Finale / Soggetto Responsabile)
-  c_nome_ragione: { x: 200, y: 520, size: 12 },
-  c_cf_piva: { x: 210, y: 490, size: 12 },
-  c_residenza_sede: { x: 185, y: 460, size: 12 },
-  c_pec_email: { x: 140, y: 430, size: 12 },
+  c_nome_ragione: { x: 210, y: 493, size: 12 },
+  c_cf_piva: { x: 210, y: 475, size: 12 },
+  c_residenza_sede: { x: 185, y: 458, size: 12 },
+  c_pec_email: { x: 120, y: 438, size: 12 },
 
-  // Art.2 - descrizione tecnica intervento (campo lungo sotto elenco checkbox)
   descrizione_tecnica: {
-    x: 55,
-    y: 145,
-    size: 11,
+    x: 32,
+    y: 50,
+    size: 14,
     maxCharsPerLine: 85,
     lineHeight: 14,
     maxLines: 4,
   },
 
   // ===== CONTRATTO - PAGINA 2 =====
-  // Art.3 - Importo lavori €
-  importo_lavori: { x: 345, y: 755, size: 12 },
+  importo_lavori: { x: 330, y: 775, size: 12 },
+  importo_incentivo: { x: 320, y: 595, size: 12 },
 
-  // Art.4 - Incentivo CT3 (importo stimato) €
-  importo_incentivo: { x: 360, y: 610, size: 12 },
+  pagamento_diretto: { x: 28, y: 435, size: 1 },
+  pagamento_sconto: { x: 28, y: 415, size: 1 },
+  pagamento_cessione: { x: 28, y: 398, size: 1 },
 
-  // Art.5 - Modalità pagamento (checkbox)
-  // (metto 3 caselle: diretto / sconto / cessione)
-  pagamento_diretto: { x: 56, y: 500, size: 12 },
-  pagamento_sconto: { x: 56, y: 475, size: 12 },
-  pagamento_cessione: { x: 56, y: 450, size: 12 },
-
-  // se scegli "cessione", qui puoi scrivere dettaglio modalità
   pagamento_cessione_dettaglio: {
     x: 55,
     y: 422,
@@ -64,66 +54,58 @@ const POS = {
     maxLines: 2,
   },
 
-  // ===== CONTRATTO - ULTIMA PAGINA FIRME (può essere pagina 3 o 4 o 5) =====
-  // Luogo e data
-  luogoedata: { x: 140, y: 730, size: 12 },
-
-  // Firme (cliente e società)
+  // ===== PAGINA FIRME (ultima del contratto, prima dell’elenco) =====
+  luogoedata: { x: 110, y: 215, size: 12 },
   firma_cliente: { x: 120, y: 520, w: 220, h: 65 },
   firma_societa: { x: 420, y: 520, w: 220, h: 65 },
 
-  // ===== ELENCO INTERVENTI (pagina aggiunta dal template elenco) =====
-  // --- 1) Fotovoltaico ---
-  fv_marca_modello: { x: 300, y: 660, size: 13 },
-  fv_potenza: { x: 300, y: 622, size: 13 },
+  // ===== ELENCO INTERVENTI (ultima pagina del PDF) =====
+  fv_marca_modello: { x: 200, y: 690, size: 13 },
+  fv_potenza: { x: 150, y: 672, size: 13 },
   fv_caratteristiche: {
-    x: 300,
-    y: 584,
+    x: 190,
+    y: 650,
     size: 13,
-    maxCharsPerLine: 48,
+    maxCharsPerLine: 58,
     lineHeight: 16,
     maxLines: 3,
   },
 
-  // --- 2) Pompa di calore ---
-  pdc_marca_modello: { x: 300, y: 490, size: 13 },
-  pdc_potenza: { x: 300, y: 452, size: 13 },
+  pdc_marca_modello: { x: 210, y: 540, size: 13 },
+  pdc_potenza: { x: 150, y: 518, size: 13 },
   pdc_caratteristiche: {
-    x: 300,
-    y: 414,
+    x: 190,
+    y: 498,
     size: 13,
     maxCharsPerLine: 48,
     lineHeight: 16,
     maxLines: 3,
   },
 
-  // --- 3) Climatizzatori +++ A ---
-  clima_quantita: { x: 455, y: 322, size: 13 },
-  clima_marca_modello: { x: 300, y: 285, size: 13 },
-  clima_potenza: { x: 300, y: 247, size: 13 },
+  clima_quantita: { x: 350, y: 404, size: 13 },
+  clima_marca_modello: { x: 210, y: 372, size: 13 },
+  clima_potenza: { x: 150, y: 352, size: 13 },
   clima_caratteristiche: {
-    x: 300,
-    y: 209,
+    x: 190,
+    y: 330,
     size: 13,
     maxCharsPerLine: 48,
     lineHeight: 16,
     maxLines: 3,
   },
 
-  // --- 4) Scaldacqua +++A / Solare termico ---
-  sc_marca_modello: { x: 300, y: 140, size: 13 },
-  sc_potenza: { x: 300, y: 110, size: 13 },
+  sc_marca_modello: { x: 210, y: 205, size: 13 },
+  sc_potenza: { x: 150, y: 185, size: 13 },
   sc_caratteristiche: {
-    x: 300,
-    y: 80,
+    x: 190,
+    y: 165,
     size: 13,
     maxCharsPerLine: 48,
     lineHeight: 16,
     maxLines: 2,
   },
 
-  // Firma Cliente su elenco
-  firma_cliente_elenco: { x: 360, y: 195, w: 200, h: 55 },
+  firma_cliente_elenco: { x: 400, y: 115, w: 200, h: 55 },
 };
 
 export default function CompilerContoTermico() {
@@ -136,18 +118,14 @@ export default function CompilerContoTermico() {
     c_residenza_sede: "",
     c_pec_email: "",
 
-    // Art.2 descrizione tecnica
     descrizione_tecnica: "",
 
-    // Art.3 / Art.4
     importo_lavori: "",
     importo_incentivo: "",
 
-    // Art.5 modalità pagamento (una sola scelta tipicamente)
     pagamento: "diretto", // "diretto" | "sconto" | "cessione"
     pagamento_cessione_dettaglio: "",
 
-    // Luogo e data (ultima pagina firme)
     luogoedata: "",
 
     // ===== Elenco interventi =====
@@ -168,12 +146,11 @@ export default function CompilerContoTermico() {
     sc_potenza: "",
     sc_caratteristiche: "",
 
-    // ===== campi già presenti nel tuo invio (ti servono per backend) =====
-    // (se vuoi, li puoi sostituire/collegare ai tuoi vecchi campi p_mail ecc.)
-    email_invio: "", // mail cliente per backend (obbligatoria)
+    // ===== invio backend =====
+    email_invio: "",
     telefono_invio: "",
-    nome_invio: "", // opzionale
-    relazioneTesto: "", // se vuoi riusare
+    nome_invio: "",
+    relazioneTesto: "",
   });
 
   // ---- allegati stile Dojo ----
@@ -353,7 +330,6 @@ export default function CompilerContoTermico() {
 
   // helper: disegna una X in una checkbox
   const drawX = (page, x, y) => {
-    // una X semplice con due linee
     page.drawLine({
       start: { x: x, y: y },
       end: { x: x + 10, y: y + 10 },
@@ -368,39 +344,31 @@ export default function CompilerContoTermico() {
     });
   };
 
-  // ----------- GENERA PDF (contratto + elenco) ----------
+  // ----------- GENERA PDF (UN SOLO TEMPLATE) ----------
   const generatePdf = async () => {
-    // carica contratto
-    const bytesContratto = await fetch(TEMPLATE_CONTRATTO_URL).then((r) =>
-      r.arrayBuffer(),
-    );
-    const pdfDoc = await PDFDocument.load(bytesContratto);
+    const bytes = await fetch(TEMPLATE_PDF_URL).then((r) => r.arrayBuffer());
+    const pdfDoc = await PDFDocument.load(bytes);
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-
-    // carica elenco e append come ultima pagina
-    const bytesElenco = await fetch(TEMPLATE_ELENCO_URL).then((r) =>
-      r.arrayBuffer(),
-    );
-    const elencoDoc = await PDFDocument.load(bytesElenco);
-
-    const elencoPages = await pdfDoc.copyPages(
-      elencoDoc,
-      elencoDoc.getPageIndices(),
-    );
-    elencoPages.forEach((p) => pdfDoc.addPage(p));
 
     const pages = pdfDoc.getPages();
     const total = pages.length;
 
-    // Assunzioni robuste:
-    // - pagina 1 contratto = pages[0]
-    // - pagina 2 contratto = pages[1]
-    // - pagina firme = l'ultima pagina del contratto (prima dell'elenco)
-    // - pagina elenco = ultima pagina del PDF finale
-    const pageContratto1 = pages[0];
-    const pageContratto2 = pages[1] || pages[0]; // fallback
-    const pageElenco = pages[total - 1];
-    const pageFirme = pages[total - 2] || pages[0];
+    // ✅ TUTTO AVANTI DI UNA PAGINA:
+    // - Pagina 1 campi contratto -> pages[1]
+    // - Pagina 2 campi contratto -> pages[2]
+    // - Pagina firme -> penultima (total - 2)
+    // - Elenco interventi -> ultima (total - 1)
+    const pageContratto1 = pages[1] || pages[0];
+    const pageContratto2 = pages[2] || pages[1] || pages[0];
+    const pageFirme = pages[total - 2] || pages[total - 1] || pages[0];
+    const pageElenco = pages[total - 1] || pages[0];
+
+    if (!pageContratto1 || !pageContratto2 || !pageFirme || !pageElenco) {
+      alert(
+        `Errore: PDF non valido o pagine insufficienti. Trovate: ${pages.length}.`,
+      );
+      return;
+    }
 
     const draw = (page, text, { x, y, size = 12 }) =>
       page.drawText(String(text || ""), {
@@ -460,7 +428,6 @@ export default function CompilerContoTermico() {
     draw(pageContratto2, form.importo_lavori, POS.importo_lavori);
     draw(pageContratto2, form.importo_incentivo, POS.importo_incentivo);
 
-    // Modalità pagamento (checkbox)
     if (form.pagamento === "diretto") {
       drawX(
         pageContratto2,
@@ -484,7 +451,7 @@ export default function CompilerContoTermico() {
       );
     }
 
-    // ====== PAGINA FIRME (ultima del contratto) ======
+    // ====== PAGINA FIRME ======
     draw(pageFirme, form.luogoedata, POS.luogoedata);
 
     const sCliente = getSigDataUrl(sigClienteRef);
@@ -512,7 +479,7 @@ export default function CompilerContoTermico() {
       });
     }
 
-    // ====== ELENCO INTERVENTI (pagina finale) ======
+    // ====== ELENCO INTERVENTI (ULTIMA PAGINA) ======
     draw(pageElenco, form.fv_marca_modello, POS.fv_marca_modello);
     draw(pageElenco, form.fv_potenza, POS.fv_potenza);
     drawWrapped(pageElenco, form.fv_caratteristiche, POS.fv_caratteristiche);
@@ -548,7 +515,6 @@ export default function CompilerContoTermico() {
 
     // ===== DEBUG MARKERS =====
     if (DEBUG_COORDS) {
-      // markers su pagine chiave
       [
         ["c_nome_ragione", pageContratto1],
         ["c_cf_piva", pageContratto1],
@@ -592,7 +558,7 @@ export default function CompilerContoTermico() {
     setPdfUrl(url);
   };
 
-  // ----------- INVIO (come prima, allega il PDF finale) ----------
+  // ----------- INVIO (allega PDF finale) ----------
   const submit = async () => {
     if (!pdfUrl) return alert("Genera prima il PDF.");
 
@@ -642,9 +608,8 @@ export default function CompilerContoTermico() {
         email: form.email_invio,
         telefono: form.telefono_invio || "",
         messaggio: "",
-
         attachments,
-        // extra info utile (se poi vuoi gestirla lato backend)
+
         contratto: {
           c_nome_ragione: form.c_nome_ragione,
           c_cf_piva: form.c_cf_piva,
@@ -704,7 +669,7 @@ export default function CompilerContoTermico() {
       <div className="max-w-6xl mx-auto bg-white shadow-lg rounded-xl p-4 sm:p-6 lg:p-8 space-y-6">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-2xl sm:text-3xl font-bold text-blue-900">
-            Conto Termico 3.0 — Contratto + Elenco Interventi (PDF)
+            Conto Termico 3.0 — PDF Unico (Contratto + Elenco)
           </h2>
           <button
             onClick={() => nav("/")}
@@ -854,7 +819,7 @@ export default function CompilerContoTermico() {
         {/* ========= ELENCO INTERVENTI ========= */}
         <section className="space-y-4">
           <h3 className="text-xl font-bold text-blue-900">
-            Elenco interventi (pagina aggiunta)
+            Elenco interventi (ultima pagina)
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -967,7 +932,6 @@ export default function CompilerContoTermico() {
         <section className="bg-gray-50 p-4 rounded-lg space-y-6">
           <h3 className="text-lg font-semibold text-blue-900">Firme</h3>
 
-          {/* Firma Cliente (contratto) */}
           <div>
             <div className="flex items-center justify-between mb-2">
               <p className="font-semibold text-blue-900">
@@ -1012,7 +976,6 @@ export default function CompilerContoTermico() {
             )}
           </div>
 
-          {/* Firma Società (contratto) */}
           <div>
             <div className="flex items-center justify-between mb-2">
               <p className="font-semibold text-blue-900">
@@ -1057,7 +1020,6 @@ export default function CompilerContoTermico() {
             )}
           </div>
 
-          {/* Firma Cliente (elenco) */}
           <div>
             <div className="flex items-center justify-between mb-2">
               <p className="font-semibold text-blue-900">
@@ -1103,7 +1065,7 @@ export default function CompilerContoTermico() {
           </div>
         </section>
 
-        {/* ========= UPLOAD DOCUMENTI (uguale a prima, se ti serve) ========= */}
+        {/* ========= UPLOAD DOCUMENTI ========= */}
         <section className="space-y-6">
           <h2 className="text-xl sm:text-2xl font-bold text-blue-900 text-center">
             Caricamento Documenti
