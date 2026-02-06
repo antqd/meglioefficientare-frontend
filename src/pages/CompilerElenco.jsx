@@ -105,7 +105,7 @@ const POS = {
     maxLines: 2,
   },
 
-  firma_cliente_elenco: { x: 400, y: 95, w: 200, h: 55 },
+  firma_cliente_elenco: { x: 350, y: 95, w: 120, h: 35 },
 };
 
 export default function CompilerContoTermico() {
