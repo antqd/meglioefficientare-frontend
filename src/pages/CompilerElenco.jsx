@@ -56,8 +56,8 @@ const POS = {
 
   // ===== PAGINA FIRME (ultima del contratto, prima dell’elenco) =====
   luogoedata: { x: 110, y: 215, size: 12 },
-  firma_cliente: { x: 120, y: 520, w: 220, h: 65 },
-  firma_societa: { x: 420, y: 520, w: 220, h: 65 },
+  firma_cliente: { x: 120, y: 100, w: 150, h: 45 },
+  firma_societa: { x: 420, y: 100, w: 150, h: 45 },
 
   // ===== ELENCO INTERVENTI (ultima pagina del PDF) =====
   fv_marca_modello: { x: 200, y: 690, size: 13 },
@@ -105,7 +105,7 @@ const POS = {
     maxLines: 2,
   },
 
-  firma_cliente_elenco: { x: 400, y: 115, w: 200, h: 55 },
+  firma_cliente_elenco: { x: 400, y: 95, w: 200, h: 55 },
 };
 
 export default function CompilerContoTermico() {
