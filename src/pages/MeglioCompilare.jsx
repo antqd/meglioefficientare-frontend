@@ -23,14 +23,7 @@ const REQUIRED_DOCS = [
     href: "/check1.pdf",
     filename: "check1.pdf",
   },
-  {
-    key: "checklist",
-    title: "✅ Checklist documenti (CT3)",
-    description:
-      "Checklist rapida per verificare che non manchi nulla prima dell’invio.",
-    href: "check2.pdf",
-    filename: "check2.pdf",
-  },
+  
 ];
 
 // ====== Coordinate di stampa (NON MODIFICATE) ======
