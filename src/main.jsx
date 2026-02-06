@@ -18,6 +18,7 @@ import AccountPage from "./pages/Account.jsx";
 import ProfiloPage from "./pages/Profilo.jsx";
 import ThankYouPage from "./pages/ThankYou.jsx";
 import MetaPixel from "./components/MetaPixel.jsx";
+import CompilerElencoInterventiCT3 from "./pages/CompilerElenco.jsx";
 
 createRoot(document.getElementById("root")).render(
   <React.StrictMode>
@@ -40,6 +41,7 @@ createRoot(document.getElementById("root")).render(
         <Route path="/account" element={<AccountPage />} />
         <Route path="/profilo" element={<ProfiloPage />} />
         <Route path="/thank-you" element={<ThankYouPage />} />
+        <Route path="/compiler-elenco" element={<CompilerElencoInterventiCT3 />} />
 
         {/* 404 fallback */}
         <Route
