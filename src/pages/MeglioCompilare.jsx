@@ -28,11 +28,16 @@ const REQUIRED_DOCS = [
 
 // ====== Coordinate di stampa (NON MODIFICATE) ======
 const POS = {
-  // FIRME pagina 4 (più piccole)
+  // ENERGY PLANNER (pagina 2)
+  ep_nome: { x: 155, y: 365, size: 12 },
+  ep_mail: { x: 85, y: 345, size: 12 },
+  ep_cell: { x: 360, y: 345, size: 12 },
+
+  // FIRME pagina 2 (più piccole)
   firma_benef_p4: { x: 120, y: 110, w: 140, h: 45 },
   firma_resp_p4: { x: 420, y: 110, w: 140, h: 45 },
 
-  // ✅ NOTE pagina 4 (testo lungo, va a capo)
+  // ✅ NOTE pagina 2 (testo lungo, va a capo)
   // (misure precise/posizione te le sistemi tu)
   note_p4: {
     x: 55,
@@ -93,7 +98,12 @@ export default function CompilerContoTermico() {
     a_mail: "",
     a_categoria: "",
 
-    // Pagina 5
+    // ENERGY PLANNER
+    ep_nome: "",
+    ep_mail: "",
+    ep_cell: "",
+
+    // Pagina 3
     luogoedata: "",
 
     // Relazione tecnica commerciale (verrà allegata come .txt dal backend)
@@ -283,13 +293,13 @@ export default function CompilerContoTermico() {
 
     const pages = pdfDoc.getPages();
 
-    // ✅ PAGINE 4 e 5 (indice 3 e 4) perché getPages() è 0-based
-    const page4 = pages[2];
-    const page5 = pages[3];
+    // ✅ PAGINE 2 e 3 (indice 1 e 2) perché getPages() è 0-based
+    const page2 = pages[1];
+    const page3 = pages[2];
 
-    if (!page4 || !page5) {
+    if (!page2 || !page3) {
       alert(
-        `Errore: il PDF non ha abbastanza pagine. Trovate: ${pages.length}. Servono almeno 5 pagine.`,
+        `Errore: il PDF non ha abbastanza pagine. Trovate: ${pages.length}. Servono almeno 3 pagine.`,
       );
       return;
     }
@@ -342,33 +352,38 @@ export default function CompilerContoTermico() {
       });
     };
 
-    // p4 Privato
-    draw(page4, form.p_nome, POS.p_nome);
-    draw(page4, form.p_iban, POS.p_iban);
-    draw(page4, form.p_zona, POS.p_zona);
-    draw(page4, form.p_indirizzo, POS.p_indirizzo);
-    draw(page4, form.p_comune, POS.p_comune);
-    draw(page4, form.p_telefono, POS.p_telefono);
-    draw(page4, form.p_mail, POS.p_mail);
-    draw(page4, form.p_categoria, POS.p_categoria);
+    // p2 Privato
+    draw(page2, form.p_nome, POS.p_nome);
+    draw(page2, form.p_iban, POS.p_iban);
+    draw(page2, form.p_zona, POS.p_zona);
+    draw(page2, form.p_indirizzo, POS.p_indirizzo);
+    draw(page2, form.p_comune, POS.p_comune);
+    draw(page2, form.p_telefono, POS.p_telefono);
+    draw(page2, form.p_mail, POS.p_mail);
+    draw(page2, form.p_categoria, POS.p_categoria);
 
-    // p4 Azienda
-    draw(page4, form.a_denominazione, POS.a_denominazione);
-    draw(page4, form.a_iban, POS.a_iban);
-    draw(page4, form.a_zona, POS.a_zona);
-    draw(page4, form.a_indirizzo, POS.a_indirizzo);
-    draw(page4, form.a_comune, POS.a_comune);
-    draw(page4, form.a_telefono, POS.a_telefono);
-    draw(page4, form.a_mail, POS.a_mail);
-    draw(page4, form.a_categoria, POS.a_categoria);
+    // p2 Azienda
+    draw(page2, form.a_denominazione, POS.a_denominazione);
+    draw(page2, form.a_iban, POS.a_iban);
+    draw(page2, form.a_zona, POS.a_zona);
+    draw(page2, form.a_indirizzo, POS.a_indirizzo);
+    draw(page2, form.a_comune, POS.a_comune);
+    draw(page2, form.a_telefono, POS.a_telefono);
+    draw(page2, form.a_mail, POS.a_mail);
+    draw(page2, form.a_categoria, POS.a_categoria);
 
-    // ✅ NOTE in pagina 4 (usa relazioneTesto come testo note)
-    drawWrapped(page4, form.relazioneTesto, POS.note_p4);
+    // p2 Energy Planner
+    draw(page2, form.ep_nome, POS.ep_nome);
+    draw(page2, form.ep_mail, POS.ep_mail);
+    draw(page2, form.ep_cell, POS.ep_cell);
 
-    // p5
-    draw(page5, form.luogoedata, POS.luogoedata);
+    // ✅ NOTE in pagina 2 (usa relazioneTesto come testo note)
+    drawWrapped(page2, form.relazioneTesto, POS.note_p4);
 
-    // === FIRME (stessa immagine su p4 e p5) ===
+    // p3
+    draw(page3, form.luogoedata, POS.luogoedata);
+
+    // === FIRME (stessa immagine su p2 e p3) ===
     const s1 = getSigDataUrl(sigBenefRef);
     const s2 = getSigDataUrl(sigRespRef);
 
@@ -376,16 +391,16 @@ export default function CompilerContoTermico() {
       const b1 = await fetch(s1).then((r) => r.arrayBuffer());
       const png1 = await pdfDoc.embedPng(b1);
 
-      // pagina 4 (più piccola)
-      page4.drawImage(png1, {
+      // pagina 2 (più piccola)
+      page2.drawImage(png1, {
         x: POS.firma_benef_p4.x,
         y: POS.firma_benef_p4.y,
         width: POS.firma_benef_p4.w,
         height: POS.firma_benef_p4.h,
       });
 
-      // pagina 5 (normale)
-      page5.drawImage(png1, {
+      // pagina 3 (normale)
+      page3.drawImage(png1, {
         x: POS.firma_benef.x,
         y: POS.firma_benef.y,
         width: POS.firma_benef.w,
@@ -397,16 +412,16 @@ export default function CompilerContoTermico() {
       const b2 = await fetch(s2).then((r) => r.arrayBuffer());
       const png2 = await pdfDoc.embedPng(b2);
 
-      // pagina 4 (più piccola)
-      page4.drawImage(png2, {
+      // pagina 2 (più piccola)
+      page2.drawImage(png2, {
         x: POS.firma_resp_p4.x,
         y: POS.firma_resp_p4.y,
         width: POS.firma_resp_p4.w,
         height: POS.firma_resp_p4.h,
       });
 
-      // pagina 5 (normale)
-      page5.drawImage(png2, {
+      // pagina 3 (normale)
+      page3.drawImage(png2, {
         x: POS.firma_resp.x,
         y: POS.firma_resp.y,
         width: POS.firma_resp.w,
@@ -416,7 +431,7 @@ export default function CompilerContoTermico() {
 
     // ✅ DEBUG: marker coordinate
     if (DEBUG_COORDS) {
-      const keysP4 = [
+      const keysP2 = [
         "p_nome",
         "p_iban",
         "p_zona",
@@ -433,19 +448,22 @@ export default function CompilerContoTermico() {
         "a_telefono",
         "a_mail",
         "a_categoria",
+        "ep_nome",
+        "ep_mail",
+        "ep_cell",
       ];
-      keysP4.forEach((k) => debugMark(page4, k, POS[k]));
+      keysP2.forEach((k) => debugMark(page2, k, POS[k]));
 
-      const keysP5 = ["luogoedata"];
-      keysP5.forEach((k) => debugMark(page5, k, POS[k]));
+      const keysP3 = ["luogoedata"];
+      keysP3.forEach((k) => debugMark(page3, k, POS[k]));
 
-      debugMark(page4, "firma_benef_p4", POS.firma_benef_p4);
-      debugMark(page4, "firma_resp_p4", POS.firma_resp_p4);
-      debugMark(page5, "firma_benef", POS.firma_benef);
-      debugMark(page5, "firma_resp", POS.firma_resp);
+      debugMark(page2, "firma_benef_p4", POS.firma_benef_p4);
+      debugMark(page2, "firma_resp_p4", POS.firma_resp_p4);
+      debugMark(page3, "firma_benef", POS.firma_benef);
+      debugMark(page3, "firma_resp", POS.firma_resp);
 
       // ✅ marker NOTE
-      debugMark(page4, "note_p4", POS.note_p4);
+      debugMark(page2, "note_p4", POS.note_p4);
     }
 
     const out = await pdfDoc.save();
@@ -539,6 +557,7 @@ export default function CompilerContoTermico() {
         nome: form.p_nome, // se vuoi separare nome/cognome in futuro, ok
         cognome: "",
         email: form.p_mail, // <<< QUESTO ti risolve "missing_fields"
+        pmail: form.ep_mail, // <<< MAIL ENERGY PLANNER (inviata anche a lui)
         telefono: form.p_telefono,
         messaggio: "",
 
@@ -565,6 +584,11 @@ export default function CompilerContoTermico() {
           telefono: form.a_telefono,
           email: form.a_mail,
           categoria_catastale: form.a_categoria,
+        },
+        energy_planner: {
+          nome: form.ep_nome,
+          mail: form.ep_mail,
+          cell: form.ep_cell,
         },
         luogoedata: form.luogoedata,
         relazioneTesto: form.relazioneTesto,
@@ -744,10 +768,40 @@ export default function CompilerContoTermico() {
           </div>
         </section>
 
-        {/* Pagina 5 */}
+        {/* ENERGY PLANNER */}
         <section className="space-y-3">
           <h3 className="text-lg sm:text-xl font-semibold text-blue-900">
-            Luogo e data (pagina 5)
+            Energy Planner
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <input
+              className="px-3 py-2 border rounded-lg sm:col-span-2"
+              name="ep_nome"
+              placeholder="Nome e Cognome"
+              value={form.ep_nome}
+              onChange={onChange}
+            />
+            <input
+              className="px-3 py-2 border rounded-lg"
+              name="ep_mail"
+              placeholder="Mail"
+              value={form.ep_mail}
+              onChange={onChange}
+            />
+            <input
+              className="px-3 py-2 border rounded-lg"
+              name="ep_cell"
+              placeholder="Cell"
+              value={form.ep_cell}
+              onChange={onChange}
+            />
+          </div>
+        </section>
+
+        {/* Pagina 3 */}
+        <section className="space-y-3">
+          <h3 className="text-lg sm:text-xl font-semibold text-blue-900">
+            Luogo e data (pagina 3)
           </h3>
           <input
             className="px-3 py-2 border rounded-lg w-full"
